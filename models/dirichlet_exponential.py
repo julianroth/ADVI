@@ -43,3 +43,10 @@ def initial_state():
     beta = beta_prior_distribution().sample(I*K)
     params = tf.concat([tf.reshape(theta, [-1]), beta], 0)
     return params
+
+
+def std_step_size():
+    std_theta = theta_prior_distribution().stddev()[0]
+    std_beta = beta_prior_distribution().stddev()
+    step_size = tf.concat([std_theta * np.ones(U*K), std_beta * np.ones(I*K)], 0)
+    return step_size
