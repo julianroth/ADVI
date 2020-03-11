@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
-from models.ard import joint_log_prob, return_initial_state
+from models.ard import joint_log_prob, return_initial_state, sep_params
 # NEXT TO DO MUST CHANGE INITAL CHAIN STATES TO SAMPLE FROM DISTRIBUTION
 # Target distribution is proportional to: `exp(-x (1 + x))`.
 
@@ -52,7 +52,10 @@ def run_chain():
 print(" will start to run chain!!!!!!!!!!!!!!!!!!")
 
 sample_mean, is_accepted = run_chain()
+
 print(is_accepted)
+print(sample_mean.shape)
+w, tau, alpha = sep_params(sample_mean)
 print("check4")
 #print('mean:{:.4f}  stddev:{:.4f}'.format(
 #    sample_mean.numpy(), sample_stddev.numpy()))
