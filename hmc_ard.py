@@ -35,24 +35,24 @@ print("check2")
 def run_chain():
   print("run chain")
   # Run the chain (with burn-in).
-  samples, is_accepted = tfp.mcmc.sample_chain(
+  states, is_accepted = tfp.mcmc.sample_chain(
       num_results=num_results,
       num_burnin_steps=num_burnin_steps,
       current_state=initial_chain_state,
-      kernel=adaptive_hmc)
-  print("samples is", samples.shape)
-  print("is_accepted", is_accepted.shape)
-  sample_mean = tf.reduce_mean(samples)
-  print("sample mean", sample_mean.shape)
-  sample_stddev = tf.math.reduce_std(samples)
-  print("sample stdev", sample_stddev.shape) 
-  is_accepted = tf.reduce_mean(tf.cast(is_accepted, dtype=tf.float32))
-  print("is_accepted", is_accepted.shape)
-  return sample_mean, sample_stddev, is_accepted
+      kernel=adaptive_hmc,
+    trace_fn=lambda _, pkr: pkr.inner_results.is_accepted)
+  return states, is_accepted
+#  sample_mean = tf.reduce_mean(states, axis=0)
+#  sample_stddev = tf.sqrt(tf.reduce_mean(
+#    tf.squared_difference(states, sample_mean),
+#    axis=0))
+    
+
 
 print(" will start to run chain!!!!!!!!!!!!!!!!!!")
 
-sample_mean, sample_stddev, is_accepted = run_chain()
+sample_mean, is_accepted = run_chain()
+print(is_accepted)
 print("check4")
-print('mean:{:.4f}  stddev:{:.4f}  acceptance:{:.4f}'.format(
-    sample_mean.numpy(), sample_stddev.numpy(), is_accepted.numpy()))
+#print('mean:{:.4f}  stddev:{:.4f}'.format(
+#    sample_mean.numpy(), sample_stddev.numpy()))

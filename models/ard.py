@@ -44,7 +44,8 @@ def joint_log_prob(y, x, params):
     likelihood = tfd.Normal(tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y)
     sum_alpha_prior = tf.reduce_sum(alpha)
     print("join log called")
-    sum_is = tf.reduce_sum(likelihood) + w_prior.log_prob(w) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
+    print("orintingggg", w_prior.log_prob(w).shape)
+    sum_is = tf.reduce_sum(likelihood) + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
     print("sum complete")
     return sum_is
 
