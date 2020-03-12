@@ -13,9 +13,26 @@ def make_training_data(num_samples, dims, sigma):
   y = w.dot(x) + noise
   return y, x, w
 
+def sep_training_test(y,x, test):
+  y_train = y[:test]
+  y_test = y[test:]
+  x_train = x[:test]
+  x_test = x[:test]
+  return y_train, y_test, x_train, x_test
+
+
 y, x, w = make_training_data(100, 10, 0.5)
+print("y shape", y.shape)
+print("x shape", x.shape)
+print("w shape", w.shape)
+
+y_train, y_test, x_train, x_test = sep_training_test(y,x,10)
+print(y_train.shape)
+print(y_test.shape)
+print(x_train.shape)
+print(x_test.shape)
 initial_chain_state = return_initial_state(10)
-joint_log_prob2 = lambda *args: joint_log_prob(y, x, *args)
+joint_log_prob2 = lambda *args: joint_log_prob(y_train, x_train, *args)
 num_results = int(10e3)
 num_burnin_steps = int(1e3)
 adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
@@ -25,6 +42,10 @@ adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
         step_size=1.),
     num_adaptation_steps=int(num_burnin_steps * 0.8))
 
+nuts = tfp.mcmc.NoUTurnSampler(
+    target_log_prob_fn=joint_log_prob2, step_size=1., max_tree_depth=10, max_energy_diff=1000.0,
+    unrolled_leapfrog_steps=1, parallel_iterations=10, seed=None, name=None
+)
 @tf.function
 def run_chain():
   print("run chain")
@@ -37,10 +58,20 @@ def run_chain():
     trace_fn=lambda _, pkr: pkr.inner_results.is_accepted)
   return states, is_accepted
 
+@tf.function
+def run_chain_nuts():
+  print("running chain")
+  # Run the chain (with burn-in).
+  states, is_accepted = tfp.mcmc.sample_chain(
+      num_results=20,
+      num_burnin_steps=num_burnin_steps,
+      current_state=initial_chain_state,
+      kernel=nuts)
+  return states, is_accepted
 
 print(" will start to run chain!!!!!!!!!!!!!!!!!!")
 
-states, is_accepted = run_chain()
+states, is_accepted = run_chain_nuts()
 
 print(is_accepted)
 
