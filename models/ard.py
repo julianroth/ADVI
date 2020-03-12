@@ -4,9 +4,7 @@ tfd = tfp.distributions
 import numpy as np
 
 def convert_alpha(alpha):
-    print("converting alpha")
     one_over_sqrt_alpha  = tf.map_fn(lambda x:  1/(tf.math.sqrt(x)), alpha, dtype=tf.float64)
-    print("one_over_sqrting alpha", one_over_sqrt_alpha.shape)
     return one_over_sqrt_alpha
 
 a_0 = tf.constant(1, dtype=tf.float64)
@@ -31,7 +29,6 @@ def sep_params(matrix, features):
 
 def joint_log_prob(y, x, params):
     features = x.shape[0]
-    print("features!!!", features)
     # Must check
     # input current estimates of parameters, data,
     # return log joint distribution
@@ -43,10 +40,7 @@ def joint_log_prob(y, x, params):
     w_prior = w_prior_(sigma, one_over_sqrt_alpha)
     likelihood = tfd.Normal(tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y)
     sum_alpha_prior = tf.reduce_sum(alpha)
-    print("join log called")
-    print("orintingggg", w_prior.log_prob(w).shape)
     sum_is = tf.reduce_sum(likelihood) + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
-    print("sum complete")
     return sum_is
 
 def return_initial_state(features):
@@ -56,7 +50,5 @@ def return_initial_state(features):
     tau = tf.reshape(tau, [1])
     one_over_sqrt_alpha = convert_alpha(alpha)
     w = w_prior_(sigma, one_over_sqrt_alpha).sample()
-
-    print("concat shape", tf.concat([w, tau, alpha],0).shape )
     return tf.concat([w, tau, alpha],0)
      

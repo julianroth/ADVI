@@ -14,12 +14,8 @@ def make_training_data(num_samples, dims, sigma):
   return y, x, w
 
 y, x, w = make_training_data(100, 10, 0.5)
-print("x is:", x.shape)
 initial_chain_state = return_initial_state(10)
-
-print("check0")
 joint_log_prob2 = lambda *args: joint_log_prob(y, x, *args)
-print("check1")
 num_results = int(10e3)
 num_burnin_steps = int(1e3)
 adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
@@ -29,8 +25,6 @@ adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
         step_size=1.),
     num_adaptation_steps=int(num_burnin_steps * 0.8))
 
-print("check2")
-# Run the chain (with burn-in).
 @tf.function
 def run_chain():
   print("run chain")
@@ -42,20 +36,20 @@ def run_chain():
       kernel=adaptive_hmc,
     trace_fn=lambda _, pkr: pkr.inner_results.is_accepted)
   return states, is_accepted
-#  sample_mean = tf.reduce_mean(states, axis=0)
-#  sample_stddev = tf.sqrt(tf.reduce_mean(
-#    tf.squared_difference(states, sample_mean),
-#    axis=0))
-    
 
 
 print(" will start to run chain!!!!!!!!!!!!!!!!!!")
 
-sample_mean, is_accepted = run_chain()
+states, is_accepted = run_chain()
 
 print(is_accepted)
-print(sample_mean.shape)
-w, tau, alpha = sep_params(sample_mean)
+
+print("states shape", states.shape)
+sample_mean = tf.reduce_mean(states, axis=[0]) 
+w, tau, alpha = sep_params(sample_mean, 10)
+print("w shape", w.shape)
+print("tau shape", tau.shape)
+print("alpha shape", alpha.shape)
 print("check4")
 #print('mean:{:.4f}  stddev:{:.4f}'.format(
 #    sample_mean.numpy(), sample_stddev.numpy()))
