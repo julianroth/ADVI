@@ -4,9 +4,7 @@ tfd = tfp.distributions
 import numpy as np
 
 def convert_alpha(alpha):
-    print("converting alpha")
     one_over_sqrt_alpha  = tf.map_fn(lambda x:  1/(tf.math.sqrt(x)), alpha, dtype=tf.float64)
-    print("one_over_sqrting alpha", one_over_sqrt_alpha.shape)
     return one_over_sqrt_alpha
 
 a_0 = tf.constant(1, dtype=tf.float64)
@@ -31,7 +29,6 @@ def sep_params(matrix, features):
 
 def joint_log_prob(y, x, params):
     features = x.shape[0]
-    print("features!!!", features)
     # Must check
     # input current estimates of parameters, data,
     # return log joint distribution
@@ -41,13 +38,23 @@ def joint_log_prob(y, x, params):
     tau_prior = tau_prior_()
     sigma = tf.math.sqrt(tau)
     w_prior = w_prior_(sigma, one_over_sqrt_alpha)
-    likelihood = tfd.Normal(tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y)
+    log_likelihood = tfd.Normal(tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y)
     sum_alpha_prior = tf.reduce_sum(alpha)
-    print("join log called")
-    print("orintingggg", w_prior.log_prob(w).shape)
-    sum_is = tf.reduce_sum(likelihood) + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
-    print("sum complete")
+    sum_is = tf.reduce_sum(
+        log_likelihood) + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
     return sum_is
+
+def log_likelihood(y, x, params):
+    features = x.shape[0]
+    w, tau, alpha = sep_params(params, features)
+    alpha_prior = alpha_prior_()
+    one_over_sqrt_alpha = convert_alpha(alpha)
+    tau_prior = tau_prior_()
+    sigma = tf.math.sqrt(tau)
+    w_prior = w_prior_(sigma, one_over_sqrt_alpha)
+    log_likelihood = tf.reduce_sum(tfd.Normal(
+        tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y))
+    return log_likelihood
 
 def return_initial_state(features):
     alpha = alpha_prior_().sample([features])
@@ -56,7 +63,5 @@ def return_initial_state(features):
     tau = tf.reshape(tau, [1])
     one_over_sqrt_alpha = convert_alpha(alpha)
     w = w_prior_(sigma, one_over_sqrt_alpha).sample()
-
-    print("concat shape", tf.concat([w, tau, alpha],0).shape )
     return tf.concat([w, tau, alpha],0)
      
