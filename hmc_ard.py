@@ -17,16 +17,16 @@ def sep_training_test(y,x, test):
   y_train = y[:test]
   y_test = y[test:]
   x_train = x[:test]
-  x_test = x[:test]
+  x_test = x[test:]
   return y_train, y_test, x_train, x_test
 
 summary_writer = tf.compat.v2.summary.create_file_writer('/tmp/summary_chain', flush_millis=10000)
 
 
-y, x, w = make_training_data(100, 10, 0.5)
+y, x, weights = make_training_data(100, 10, 0.5)
 print("y shape", y.shape)
 print("x shape", x.shape)
-print("w shape", w.shape)
+print("w shape", weights.shape)
 
 y_train, y_test, x_train, x_test = sep_training_test(y,x,10)
 print(y_train.shape)
@@ -85,11 +85,12 @@ print(is_accepted)
 
 print("states shape", states.shape)
 sample_mean = tf.reduce_mean(states, axis=[0]) 
-print()
+print(sample_mean)
+log_like_fin = log_likelihood(y_test, x_test, sample_mean)
+print("log like fin", log_like_fin)
 w, tau, alpha = sep_params(sample_mean, 10)
-print("w shape", w.shape)
-print("tau shape", tau.shape)
-print("alpha shape", alpha.shape)
-print("check4")
+print("pred", w)
+print("actual", weights)
+
 #print('mean:{:.4f}  stddev:{:.4f}'.format(
 #    sample_mean.numpy(), sample_stddev.numpy()))
