@@ -44,6 +44,10 @@ def joint_log_prob(y, x, params):
         log_likelihood) + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
     return sum_is
 
+def some_kind_of_loss(y, x, w):
+    y_pred = tf.linalg.matvec(x, w, transpose_a=True)
+    return tf.reduce_sum(tf.math.abs(tf.math.subtract(y, y_pred)))
+    
 def log_likelihood(y, x, params):
     features = x.shape[0]
     w, tau, alpha = sep_params(params, features)
@@ -52,9 +56,9 @@ def log_likelihood(y, x, params):
     tau_prior = tau_prior_()
     sigma = tf.math.sqrt(tau)
     w_prior = w_prior_(sigma, one_over_sqrt_alpha)
-    log_likelihood = tf.reduce_sum(tfd.Normal(
+    log_likelihood_ = tf.reduce_sum(tfd.Normal(
         tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y))
-    return log_likelihood
+    return log_likelihood_
 
 def return_initial_state(features):
     alpha = alpha_prior_().sample([features])
