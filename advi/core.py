@@ -1,7 +1,6 @@
-
 import tensorflow as tf
 import tensorflow_probability as tfp
-from advi.model import ADVIModel
+from model import ADVIModel
 
 
 def run(dim, log_prob, bijector, nsteps, step_size, m):
@@ -20,6 +19,7 @@ def run(dim, log_prob, bijector, nsteps, step_size, m):
 # example set up
 def target(x):
     return - tf.reduce_sum(tf.add(x, tf.pow(x, 2.)))
+
 bij = tfp.bijectors.Log()
 
 q = run(dim=20, log_prob=target, bijector=bij, nsteps=100, step_size=0.1, m=10)

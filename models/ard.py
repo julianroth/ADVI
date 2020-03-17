@@ -27,17 +27,14 @@ class Ard:
         return tfd.Normal(0,tf.math.multiply(sigma, one_over_sqrt_alpha))
         
     def joint_log_prob(self, y, x, params):
-        print("features", self.features)
         # Must check
         # input current estimates of parameters, data,
         # return log joint distribution
         
         w, tau, alpha = sep_params(params, self.features)
-        print("check1")
+
         alpha_prior = self.alpha_prior_()
-        print("check2")
         one_over_sqrt_alpha = self.convert_alpha(alpha)
-        print("check3") 
         tau_prior = self.tau_prior_()
 
         sigma = tf.math.sqrt(tau)
@@ -45,10 +42,8 @@ class Ard:
         log_likelihood = tfd.Normal(
             tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y)
         sum_alpha_prior = tf.reduce_sum(alpha)
-
         sum_is = tf.reduce_sum(
             log_likelihood) + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
-        print("check4", sum_is) 
         return sum_is
         
     def some_kind_of_loss(self, y, x, w):
