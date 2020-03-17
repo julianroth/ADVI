@@ -38,6 +38,12 @@ def stddev_beta(tile=True):
         stddev = tf.tile(stddev, tf.constant([K, I], dtype=tf.int64))
     return stddev
 
+def initial_state():
+    return [theta_prior_distribution().sample([U, K]), beta_prior_distribution().sample([K, I])]
+
+def step_size():
+    return [stddev_theta(), stddev_beta()]
+
 # don't need this for nuts
 def log_prior(theta, beta):
     theta_dist = tfd.Gamma(a_0, b_0)
@@ -46,19 +52,23 @@ def log_prior(theta, beta):
     beta_prob = beta_dist.log_prob(beta)
     return tf.math.reduce_sum(theta_prob) + tf.math.reduce_sum(beta_prob)
 
-def log_posterior(theta, beta):
+def log_likelihood(theta, beta):
     theta = tf.reshape(theta, [U, K])
     beta = tf.reshape(beta, [K, I])
     params = tf.linalg.matmul(theta, beta)
     params = tf.reshape(params, [-1])
     posterior_dist = tfd.Poisson(params)
-    #print(posterior_dist)
     log_prob = posterior_dist.log_prob(data)
-    #print(log_prob)
-    print('log prob shape is', log_prob)
-    return log_prob
+    #log_prob = tf.math.reduce_mean(log_prob, axis=0)
+    return tf.math.reduce_sum(log_prob)
 
-def log_posterior_nuts(current_state):
-    theta = current_state[:U*K]
-    beta = current_state[K*U:]
-    return log_posterior(theta, beta)
+def log_posterior(theta, beta):
+    return log_prior(theta, beta) + log_likelihood(theta, beta)
+
+def transform(theta, beta):
+    log =  tfp.bijectors.Log()
+    return [log.forward(theta), log.forward(beta)]
+
+def transform_inverse(theta, beta):
+    log =  tfp.bijectors.Log()
+    return [log.inverse(theta), log.inverse(beta)]

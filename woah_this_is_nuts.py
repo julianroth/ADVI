@@ -2,30 +2,51 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 #from tensorflow_probability.mcmc import NoUTurnSampler
 from models import constrained_gamma_poisson as cgp
+from data import frey_face
 
-print(cgp.data.shape)
+data = frey_face.load_data()
 
-theta = cgp.theta_prior_distribution().sample(tf.constant(cgp.U * cgp.K, dtype=tf.int64))
-#theta = tf.reshape(theta, [cgp.U, cgp.K])
-beta = cgp.beta_prior_distribution().sample(tf.constant(cgp.K * cgp.I, dtype=tf.int64))
-#beta = tf.reshape(beta, [cgp.K, cgp.I])
+# set some sampling parameters
+num_results = 20
+num_burnin_steps = 10
+init_step_size = cgp.transform(*cgp.step_size())
+init_state = cgp.transform(*cgp.initial_state())
 
-#theta = tf.constant([0, 1, 2, 3, 4, 5], dtype=tf.float64, shape=(3, 2))
-#beta = tf.constant([0, 1, 2, 3, 4, 5], dtype=tf.float64, shape=(2, 3))
-print(theta.shape)
-p = cgp.log_prior(theta, beta)
-print(p)
+def p(log_prob, transform):
+    return lambda s1, s2: log_prob(*transform(s1, s2))
 
-p = cgp.log_posterior(theta, beta)
+# initialize kernels
+nuts_kernel = tfp.mcmc.NoUTurnSampler(
+    target_log_prob_fn=p(cgp.log_posterior, cgp.transform_inverse),
+    step_size=init_step_size
+)
 
-step_size = tf.concat([tf.reshape(cgp.stddev_theta(), [-1]), tf.reshape(cgp.stddev_beta(), [-1])], 0)
+# initialize step size adapting kernels
+# for nuts, see https://github.com/tensorflow/probability/issues/549
+nuts_adaptive_kernel = tfp.mcmc.SimpleStepSizeAdaptation(
+    inner_kernel=nuts_kernel,
+    num_adaptation_steps=int(num_burnin_steps * 0.8),
+    step_size_setter_fn=lambda pkr, new_step_size: pkr._replace(step_size=new_step_size),
+    step_size_getter_fn=lambda pkr: pkr.step_size,
+    log_accept_prob_getter_fn=lambda pkr: pkr.log_accept_ratio,
+)
 
-nuts = tfp.mcmc.NoUTurnSampler(cgp.log_posterior_nuts, step_size, parallel_iterations=1)
+print("\n\nStart NUTS sampling...")
 
-current_state = tf.concat([theta, beta], 0)
-prev_kernel = nuts.bootstrap_results(current_state)
-for i in range(10):
-    print('iteration ' + (i+1))
-    current_state, prev_kernel = nuts.one_step(current_state, prev_kernel)
+def state_saver(current_state, kernel):
+    return current_state
 
-print(cgp.log_posterior_nuts(current_state))
+chain_output_nuts = tfp.mcmc.sample_chain(
+    num_results=num_results,
+    num_burnin_steps=num_burnin_steps,
+    current_state=init_state,
+    kernel=nuts_adaptive_kernel,
+    trace_fn=state_saver
+)
+
+print(chain_output_nuts)
+print("TEST\n\n")
+print(cgp.log_posterior(*cgp.transform_inverse(*init_state)))
+for i in range(num_results):
+    theta, beta = cgp.transform_inverse(chain_output_nuts[0][i, :], chain_output_nuts[1][i, :])
+    print(cgp.log_posterior(theta, beta))
