@@ -23,8 +23,8 @@ class ADVIModel(tf.keras.Model):
         self._dist = tfp.distributions.Normal(np.zeros(self._dim),
                                               np.ones(self._dim))
         # model parameters
-        self.mu = tf.Variable(np.zeros(self._dim), dtype=tf.float64)
-        self.omega = tf.Variable(np.zeros(self._dim), dtype=tf.float64)
+        self.mu = tf.Variable(np.zeros(self._dim), dtype=tf.float64, trainable=True)
+        self.omega = tf.Variable(np.zeros(self._dim), dtype=tf.float64, trainable=True)
 
     def _sample_eta(self, nsamples=1):
         """Produces samples from the underlying Normal distribution.
@@ -75,6 +75,10 @@ class ADVIModel(tf.keras.Model):
         assert inner.shape == (nsamples,)
 
         return tf.reduce_mean(inner) + tf.reduce_sum(self.omega)
+
+    def neg_elbo(self, nsamples=-1):
+        elbo = self.elbo(nsamples=nsamples)
+        return -elbo
 
     def gradients(self, nsamples=-1):
         """Approximates the gradients for mu and omega according
