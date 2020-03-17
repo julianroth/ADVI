@@ -4,12 +4,9 @@ tfd = tfp.distributions
 import numpy as np
 
 class Ard:
-    def __init__(self, y_train, x_train, y_test, x_test):
-        self.y = y_train
-        self.x = x_train
-        self.y_test = y_test
-        self.x_test = x_test
-        self.features = self.x.shape[0]
+    def __init__(self, num_features):
+        self.features = num_features
+        self.num_params = (self.features *2) + 1
         self.a_0 = tf.constant(1, dtype=tf.float64)
         self.b_0 = tf.constant(1, dtype=tf.float64)
         self.c_0 = tf.constant(1, dtype=tf.float64)
@@ -29,38 +26,44 @@ class Ard:
     def w_prior_(self, sigma, one_over_sqrt_alpha):
         return tfd.Normal(0,tf.math.multiply(sigma, one_over_sqrt_alpha))
         
-
-    def joint_log_prob(self, params):
-        
+    def joint_log_prob(self, y, x, params):
+        print("features", self.features)
         # Must check
         # input current estimates of parameters, data,
         # return log joint distribution
+        
         w, tau, alpha = sep_params(params, self.features)
+        print("check1")
         alpha_prior = self.alpha_prior_()
+        print("check2")
         one_over_sqrt_alpha = self.convert_alpha(alpha)
+        print("check3") 
         tau_prior = self.tau_prior_()
+
         sigma = tf.math.sqrt(tau)
         w_prior = self.w_prior_(sigma, one_over_sqrt_alpha)
         log_likelihood = tfd.Normal(
-            tf.linalg.matvec(self.x, w, transpose_a=True), sigma).log_prob(self.y)
+            tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y)
         sum_alpha_prior = tf.reduce_sum(alpha)
+
         sum_is = tf.reduce_sum(
             log_likelihood) + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
+        print("check4", sum_is) 
         return sum_is
         
-    def some_kind_of_loss(self, w):
-        y_pred = tf.linalg.matvec(self.x_test, w, transpose_a=True)
-        return tf.reduce_sum(tf.math.abs(tf.math.subtract(self.y_test, y_pred)))
+    def some_kind_of_loss(self, y, x, w):
+        y_pred = tf.linalg.matvec(x, w, transpose_a=True)
+        return tf.reduce_sum(tf.math.abs(tf.math.subtract(y, y_pred)))
         
-    def log_likelihood(self, params):
-        w, tau, alpha = sep_params(params, self.features)
+    def log_likelihood(self, y, x, params):
+        w, tau, alpha = sep_params(params,self.features)
         alpha_prior = self.alpha_prior_()
         one_over_sqrt_alpha = self.convert_alpha(alpha)
         tau_prior = self.tau_prior_()
         sigma = tf.math.sqrt(tau)
         w_prior = self.w_prior_(sigma, one_over_sqrt_alpha)
         log_likelihood_ = tf.reduce_sum(tfd.Normal(
-            tf.linalg.matvec(self.x_test, w, transpose_a=True), sigma).log_prob(self.y_test))
+            tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y))
         return log_likelihood_
 
     def return_initial_state(self):
