@@ -29,9 +29,10 @@ def log_posterior(data, theta, beta):
     theta = tf.reshape(theta, [U, K])
     beta = tf.reshape(beta, [K, I])
     rates = tf.reshape(tf.linalg.matmul(theta, beta), [-1])
-    post_dist = likelihood_distribution(rates)
-    log_post_prob = tf.reduce_sum(post_dist.log_prob(data))
-    return log_post_prob
+    lik_log_prob = tf.reduce_sum(likelihood_distribution(rates).log_prob(data))
+    theta_log_prob = tf.reduce_sum(theta_prior_distribution().log_prob(theta))
+    beta_log_prob = tf.reduce_sum(theta_prior_distribution().log_prob(beta))
+    return lik_log_prob + theta_log_prob + beta_log_prob
 
 
 def log_posterior_sampling(data, params):
