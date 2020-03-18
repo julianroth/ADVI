@@ -1,4 +1,3 @@
-
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -104,7 +103,7 @@ class ADVIModel(tf.keras.Model):
             grad0 = t0.gradient(res0, theta)
             assert res0.shape == (nsamples,)
             assert grad0.shape == (nsamples, self._dim)
-
+            
         with tf.GradientTape() as t1:
             t1.watch(zeta)
             res1 = self._T.inverse(zeta)
@@ -112,7 +111,7 @@ class ADVIModel(tf.keras.Model):
             # maybe Jacobian needed instead.. but I don't think so
             assert res1.shape == (nsamples, self._dim)
             assert grad1.shape == (nsamples, self._dim)
-
+            
         with tf.GradientTape() as t2:
             t2.watch(zeta)
             res2 = tf.map_fn(self._inv_log_det_T, zeta)
