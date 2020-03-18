@@ -1,4 +1,4 @@
-import tensorflow as tf
+import tensorflowA as tfA
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 import numpy as np
@@ -27,12 +27,15 @@ class Ard:
         return tfd.Normal(0,tf.math.multiply(sigma, one_over_sqrt_alpha))
         
     def joint_log_prob(self, y, x, params):
-        # Must check
-        # input current estimates of parameters, data,
-        # return log joint distribution
-        
+        """
+        params is a tensor of size (features * 2) + 1
+        regressors / weights  = [:features]
+        tau = [features+1]
+        alpha = [features+1:]
+        y, x is test data
+        returns joint log probability
+        """
         w, tau, alpha = sep_params(params, self.features)
-
         alpha_prior = self.alpha_prior_()
         one_over_sqrt_alpha = self.convert_alpha(alpha)
         tau_prior = self.tau_prior_()
@@ -47,10 +50,18 @@ class Ard:
         return sum_is
         
     def some_kind_of_loss(self, y, x, w):
+        """
+        good for debugging
+        just does sum((y - ypred)**"2)
+        """
         y_pred = tf.linalg.matvec(x, w, transpose_a=True)
         return tf.reduce_sum(tf.math.abs(tf.math.subtract(y, y_pred)))
         
     def log_likelihood(self, y, x, params):
+        """
+        returns log likelihood
+        pass in training data y, x and the full parameters from sampling
+        """
         w, tau, alpha = sep_params(params,self.features)
         alpha_prior = self.alpha_prior_()
         one_over_sqrt_alpha = self.convert_alpha(alpha)
