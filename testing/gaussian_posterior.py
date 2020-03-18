@@ -29,7 +29,7 @@ class GaussianPosterior(unittest.TestCase):
 
         target = simple_gaussian.SimpleGaussian(mu, sigma)
 
-        res = core.run_advi(dim, target.log_prob, target.bijector(), v=100, epsilon=0.0001)
+        res = core.run_advi(dim, target.log_prob, target.bijector(), step_limit=10000)
 
         print("Target:\n  mu:     {}\n  sigma: {}".format(mu.numpy(), sigma.numpy()))
         print("ADVI result:\n  mu:     {}\n  sigma: {}".format(res.mu.numpy(), tf.exp(res.omega).numpy()))
