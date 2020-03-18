@@ -4,18 +4,6 @@ import tensorflow_probability as tfp
 from model import ADVIModel
 
 
-def run(dim, log_prob, bijector, nsteps, step_size, m):
-
-    q = ADVIModel(dim, log_prob, bijector, m)
-
-    for t in range(nsteps):
-        grad_mu, grad_omega = q.gradients()
-        q.mu = tf.add(q.mu, step_size * grad_mu)
-        q.omega = tf.add(q.omega, step_size * grad_omega)
-        #print("Step {}:\n  mu:   {}\n  omega:{}".format(t, q.mu, q.omega))
-
-    return q
-
 def run_advi(shape, target_log_prob_fn, bijector=tfp.bijectors.Identity(), epsilon=tf.constant(0.01, dtype=tf.float64), m=1, v=1000):
     if not tf.is_tensor(epsilon):
         epsilon = tf.constant(epsilon, dtype=tf.float64)
@@ -31,17 +19,16 @@ def run_advi(shape, target_log_prob_fn, bijector=tfp.bijectors.Identity(), epsil
         prev_elbo = elbo
     return advi
 
-# example set up
-def target(x):
-    return - tf.reduce_sum(tf.add(x, tf.pow(x, 2.)))
-bij = tfp.bijectors.Log()
-v = 10000
 
-q = run(dim=20, log_prob=target, bijector=bij, nsteps=100, step_size=0.1, m=10)
-print("Result:\n  mu:   {}\n  omega:{}".format(q.mu, q.omega))
-print("Empirical ELBO ({} samples): {}".format(v, q.elbo(v).numpy()))
-#print("\nTheta sample:  {}".format(q.sample()))
+# deprecated, use run_advi
+def run_old(dim, log_prob, bijector, nsteps, step_size, m):
 
-q = run_advi(20, target, bij, epsilon=0.001)
-print("Result:\n  mu:   {}\n  omega:{}".format(q.mu, q.omega))
-print("Empirical ELBO ({} samples): {}".format(v, q.elbo(v).numpy()))
+    q = ADVIModel(dim, log_prob, bijector, m)
+
+    for t in range(nsteps):
+        grad_mu, grad_omega = q.gradients()
+        q.mu = tf.add(q.mu, step_size * grad_mu)
+        q.omega = tf.add(q.omega, step_size * grad_omega)
+        #print("Step {}:\n  mu:   {}\n  omega:{}".format(t, q.mu, q.omega))
+
+    return q
