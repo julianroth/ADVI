@@ -1,7 +1,19 @@
-import tensorflow as tf
+Import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 import numpy as np
+
+# Template for models, things I need
+# 1. self.features = num_features
+# number of features in the data
+# i.e. x has 10 features
+#
+# 2. self.num_params
+# number of trainable parameters in model. 
+# 3. funtions all functions below log_likelihood
+# 
+#
+
 
 class Ard:
     def __init__(self, num_features):
