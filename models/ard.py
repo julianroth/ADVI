@@ -1,4 +1,4 @@
-Import tensorflow as tf
+import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 import numpy as np
@@ -39,15 +39,15 @@ class Ard:
         
     def w_prior_(self, sigma, one_over_sqrt_alpha):
         return tfd.Normal(0,tf.math.multiply(sigma, one_over_sqrt_alpha))
-        
-    def log_likelihood(self, y, x, params):
+
+    def log_likelihood(self, data, params):
         """
-        input y: data target 
-        input x: data
+        input data: (y, x) with y as target data and x as data
         input params: all trainable parameters in model
         returns: log likelihood
         P(D|theta)
         """
+        y, x = data
         w, tau, alpha = self.sep_params(params)
         alpha_prior = self.alpha_prior_()
         one_over_sqrt_alpha = self.convert_alpha(alpha)
@@ -58,10 +58,9 @@ class Ard:
             tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y))
         return log_likelihood_
 
-    def joint_log_prob(self, y, x, params):
+    def joint_log_prob(self, data, params):
         """
-        input y: data, target 
-        input x: data  
+        input data: (y, x) with y as target data and x as data
         params: all the parameters we are training in the model
         returns: joint log probability
         joint log prob.
@@ -71,6 +70,7 @@ class Ard:
         tau = [features+1]
         alpha = [features+1:]
         """
+        y, x = data
         w, tau, alpha = self.sep_params(params)
         alpha_prior = self.alpha_prior_()
         tau_prior = self.tau_prior_()
