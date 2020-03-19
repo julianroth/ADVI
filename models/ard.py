@@ -5,7 +5,9 @@ import numpy as np
 
 class Ard:
     def __init__(self, num_features):
+        # number of features in data
         self.features = num_features
+        # total number of trainable parameters in model
         self.num_params = (self.features *2) + 1
         self.a_0 = tf.constant(1, dtype=tf.float64)
         self.b_0 = tf.constant(1, dtype=tf.float64)
@@ -26,43 +28,15 @@ class Ard:
     def w_prior_(self, sigma, one_over_sqrt_alpha):
         return tfd.Normal(0,tf.math.multiply(sigma, one_over_sqrt_alpha))
         
-    def joint_log_prob(self, y, x, params):
-        """
-        params is a tensor of size (features * 2) + 1
-        regressors / weights  = [:features]
-        tau = [features+1]
-        alpha = [features+1:]
-        y, x is test data
-        returns joint log probability
-        """
-        w, tau, alpha = sep_params(params, self.features)
-        alpha_prior = self.alpha_prior_()
-        one_over_sqrt_alpha = self.convert_alpha(alpha)
-        tau_prior = self.tau_prior_()
-
-        sigma = tf.math.sqrt(tau)
-        w_prior = self.w_prior_(sigma, one_over_sqrt_alpha)
-        log_likelihood = tfd.Normal(
-            tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y)
-        sum_alpha_prior = tf.reduce_sum(alpha)
-        sum_is = tf.reduce_sum(
-            log_likelihood) + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
-        return sum_is
-        
-    def some_kind_of_loss(self, y, x, w):
-        """
-        good for debugging
-        just does sum((y - ypred)**"2)
-        """
-        y_pred = tf.linalg.matvec(x, w, transpose_a=True)
-        return tf.reduce_sum(tf.math.abs(tf.math.subtract(y, y_pred)))
-        
     def log_likelihood(self, y, x, params):
         """
-        returns log likelihood
-        pass in training data y, x and the full parameters from sampling
+        input y: data target 
+        input x: data
+        input params: all trainable parameters in model
+        returns: log likelihood
+        P(D|theta)
         """
-        w, tau, alpha = sep_params(params,self.features)
+        w, tau, alpha = self.sep_params(params)
         alpha_prior = self.alpha_prior_()
         one_over_sqrt_alpha = self.convert_alpha(alpha)
         tau_prior = self.tau_prior_()
@@ -72,7 +46,57 @@ class Ard:
             tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y))
         return log_likelihood_
 
+    def joint_log_prob(self, y, x, params):
+        """
+        input y: data, target 
+        input x: data  
+        params: all the parameters we are training in the model
+        returns: joint log probability
+        joint log prob.
+        log P(theta, D) = log P(theta) + log P(D|theta)
+        params is a tensor of size (features * 2) + 1
+        regressors / weights  = [:features]
+        tau = [features+1]
+        alpha = [features+1:]
+        """
+        w, tau, alpha = self.sep_params(params)
+        alpha_prior = self.alpha_prior_()
+        tau_prior = self.tau_prior_()
+        sigma = tf.math.sqrt(tau)
+        one_over_sqrt_alpha = self.convert_alpha(alpha)
+        w_prior = self.w_prior_(sigma, one_over_sqrt_alpha)
+        log_likelihood_ = tf.reduce_sum(tfd.Normal(
+            tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y))
+        sum_is = log_likelihood_ + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
+        return sum_is
+        
+    def loss(self, y, x, w):
+        """
+        input y: data target
+        input x: data
+        input w: trained parameters
+        returns: squared difference between target and predicted
+        good for debugging
+        just does sum((y - ypred)**2)
+        """
+        y_pred = tf.linalg.matvec(x, w, transpose_a=True)
+        return tf.reduce_sum(tf.math.abs(tf.math.subtract(y, y_pred)))
+
+    def sep_params(self, params):
+        """
+        input params: trained parameters for model
+        returns: parameters separated in to their different types
+        """
+        w = params[:self.features]
+        tau = params[self.features+1]
+        alpha = params[self.features+1:]
+        return w, tau, alpha
+
     def return_initial_state(self):
+        """
+        Returns: starting states for HMC and Nuts by sampling from prior
+        distribution
+        """
         alpha = self.alpha_prior_().sample([self.features])
         tau = self.tau_prior_().sample()
         sigma = tf.math.sqrt(tau)
@@ -81,9 +105,3 @@ class Ard:
         w = self.w_prior_(sigma, one_over_sqrt_alpha).sample()
         return tf.concat([w, tau, alpha],0)
      
-
-def sep_params(matrix, features):
-    w = matrix[:features]
-    tau = matrix[features+1]
-    alpha = matrix[features+1:]
-    return w, tau, alpha

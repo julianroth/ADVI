@@ -2,10 +2,12 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 from model import ADVIModel
 
-
 def run_advi(shape, target_log_prob_fn, bijector=tfp.bijectors.Identity(), epsilon=tf.constant(0.01, dtype=tf.float64), m=1, v=1000):
     if not tf.is_tensor(epsilon):
+        # floating point value is converted to epislon 
         epsilon = tf.constant(epsilon, dtype=tf.float64)
+        # stopping criterion
+        # between two steps if the change of elbow is below that algorithm we stop
     delta_elbo = 10*epsilon
     advi = ADVIModel(shape, target_log_prob_fn, bijector, m)
     sgd = tf.keras.optimizers.Adagrad(learning_rate=0.1, epsilon=1)
