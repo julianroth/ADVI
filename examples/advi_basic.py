@@ -11,7 +11,7 @@ bij = tfp.bijectors.Log()
 
 v = 10000
 
-q = core.run_advi(20, target, bij, epsilon=0.001)
+q = core.run_advi(20, target, bij, v=1000, epsilon=0.001)
 print("Result:\n  mu:   {}\n  omega:{}".format(q.mu, q.omega))
 print("Empirical ELBO ({} samples): {}".format(v, q.elbo(v).numpy()))
 
