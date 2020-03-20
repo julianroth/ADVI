@@ -1,4 +1,4 @@
-Import tensorflow as tf
+import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 import numpy as np
