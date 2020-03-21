@@ -1,19 +1,19 @@
-
-# coding: utf-8
-
-# In[1]:
-
 import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
 from advi.model import ADVIModel
 from models.ard import Ard
+import os
+try:
+  os.rmdir("/tmp/summary_chain/")
+except OSError as e:  ## if failed, report it back to the user ##
+  print("no file")
 #from models.ard import joint_log_prob, return_initial_state, sep_params, log_likelihood, some_kind_of_loss
 # NEXT TO DO MUST CHANGE INITAL CHAIN STATES TO SAMPLE FROM DISTRIBUTION
 # Target distribution is proportional to: `exp(-x (1 + x))`.
 
 #tf.config.experimental_run_functions_eagerly(True)
-
+what_to_run = "hmc"
 # ## Making training data
 def make_training_data(num_samples, dims, sigma):
   """
@@ -180,7 +180,7 @@ def run_advi(nsteps, step_size, dim, log_prob, bijector, m, regression_model):
 
 # target function 
 
-what_to_run = "advi"
+
 if(what_to_run == "advi"):
     bij = tfp.bijectors.Log()
     num_results = 10000
