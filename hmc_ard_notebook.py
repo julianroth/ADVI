@@ -28,11 +28,12 @@ def sep_training_test(y,x,test):
   y_test = y[:,:test]
   x_test = x[:,:test]
   return y_train, y_test, x_train, x_test
-what_to_run = "advi"
-num_features = 350
+what_to_run = "hmc"
+num_features = 200
 
-y, x, w = make_training_data(1200, num_features, 2)
+y, x, w = make_training_data(1000, num_features, 2)
 y_train, y_test, x_train, x_test = sep_training_test(y,x,100)
+step_size_hmc = 0.001
 
 print(y_train.shape)
 print(y_test.shape)
@@ -51,7 +52,7 @@ def state_to_loss(states, data):
     return model.loss(data, w)
 
 
-# ## Defining summary writer
+# Defining summary writer
 summary_writer = tf.compat.v2.summary.create_file_writer('/tmp/summary_chain', flush_millis=10000)
     
 def trace_fn(state, results):
@@ -66,24 +67,22 @@ def trace_fn_nuts(state, results):
     return ()
 
 
-# # Define the regression model
+# Define the regression model
 model = Ard(num_features)
 # Need to have a starting state for HMC and Nuts for chain
 joint_log_prob2 = lambda *args: model.joint_log_prob(data_train, *args)
 initial_chain_state = model.return_initial_state()
 
 
-# ## Defining kernels for HMC and NUTS
+## Defining kernels for HMC and NUTS
 
-# In[6]:
-
-num_results = int(3000)
-num_burnin_steps = int(400)
+num_results = int(970)
+num_burnin_steps = int(200)
 adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
     tfp.mcmc.HamiltonianMonteCarlo(
         target_log_prob_fn=joint_log_prob2,
         num_leapfrog_steps=3,
-        step_size=0.1),
+        step_size=step_size_hmc),
     num_adaptation_steps=int(num_burnin_steps * 0.8))
 
 nuts = tfp.mcmc.NoUTurnSampler(
@@ -92,9 +91,6 @@ nuts = tfp.mcmc.NoUTurnSampler(
     max_tree_depth=10,
     max_energy_diff=1000.0,
     unrolled_leapfrog_steps=1, parallel_iterations=10, seed=None, name=None)
-
-
-# In[7]:
 
 @tf.function
 def run_chain_hmc():
@@ -107,9 +103,6 @@ def run_chain_hmc():
       kernel=adaptive_hmc,
     trace_fn=trace_fn)
   return states, is_accepted
-
-
-# In[8]:
 
 @tf.function
 def run_chain_nuts():
@@ -124,46 +117,6 @@ def run_chain_nuts():
   return states, is_accepted
     
 
-
-# ## ADVI Stuff starts here
-
-# ### Functions to pass in to summary writer
-
-# In[9]:
-
-def get_ll_from_advi(y_test, x_test, advi, log_likelihood):
-    theta_intermediate = advi.sample()
-    theta_intermediate = tf.squeeze(theta_intermediate)
-    likelihood = log_likelihood(data_test, theta_intermediate)
-    return likelihood
-
-def get_loss_from_advi(y_test, x_test, advi, regression_model):
-    theta_intermediate = advi.sample()
-    theta_intermediate = tf.squeeze(theta_intermediate)
-    w, _, _ = regression_model.sep_params(theta_intermediate)
-    return regression_model.loss(y_test, x_test, w)
-
-def run_advi_2(nsteps, step_size, dim, log_prob, bijector, m, regression_model):
-        advi = ADVIModel(dim, log_prob, bijector, m)
-        for t in range(nsteps):
-            grad_mu, grad_omega = advi.gradients()
-            advi.mu = tf.add(advi.mu, step_size * grad_mu)
-            advi.omega = tf.add(advi.omega, step_size * grad_omega)
-            tf.summary.scalar('elbo', advi.elbo(), step=t)
-            tf.summary.scalar('log likelihood', get_ll_from_advi(y_test, x_test, advi, regression_model), step=t)
-            tf.summary.scalar('loss', get_loss_from_advi(y_test, x_test, advi, regression_model), step=t)
-            if(t%1 == 0):
-                theta_intermediate = advi.sample()
-                theta_intermediate = tf.squeeze(theta_intermediate)
-                wpred, _, _ = model.sep_params(theta_intermediate)
-                loss = regression_model.loss(y_test, x_test, wpred)
-                likelihood = regression_model.log_likelihood(data_test, theta_intermediate)
-                elbo_loss = advi.elbo()
-                print("weights", wpred)
-                print("loss", loss)
-                print("elbo", elbo_loss)
-        theta = advi.sample()
-        return theta
 
 if(what_to_run == "advi"):
     bij = tfp.bijectors.Log()
