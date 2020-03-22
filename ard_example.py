@@ -2,7 +2,12 @@ import numpy as np
 from train_plot import run_train
 from models.ard import Ard
 
-#tf.config.experimental_run_functions_eagerly(True)
+# tf.config.experimental_run_functions_eagerly(True)
+# uncomment above code when wanting to run everything in
+# eager mode
+# currently, the @tf.function turns those parts in to graphs.
+# not sure why but needed for plotting. 
+
 # Making training data
 def make_training_data(num_samples, dims, sigma):
   """
@@ -23,17 +28,17 @@ def sep_training_test(y,x,test):
   y_test = y[:,:test]
   x_test = x[:,:test]
   return y_train, y_test, x_train, x_test
-what_to_run = "hmc"
+
 num_features = 200
 
 y, x, w = make_training_data(1000, num_features, 2)
 y_train, y_test, x_train, x_test = sep_training_test(y,x,10)
-step_size_hmc = 0.001
 
 print(y_train.shape)
 print(y_test.shape)
 print(x_train.shape)
 print(x_test.shape)
+
 train_data = (y_train, x_train)
 test_data = (y_test, x_test)
 
