@@ -16,7 +16,7 @@ import numpy as np
 
 
 class Ard:
-    def __init__(self, num_features):
+    def __init__(self, num_features=250):
         # number of features in data
         self.features = num_features
         # total number of trainable parameters in model

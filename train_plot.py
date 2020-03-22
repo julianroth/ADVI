@@ -69,7 +69,7 @@ def trace_fn_nuts(state, results):
 
 
 
-model = Ard(num_features)
+model = Ard(num_features=num_features)
 # Define the regression model
 
 joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
