@@ -42,11 +42,11 @@ print(x_test.shape)
 data_train = (y_train, x_train)
 data_test = (y_test, x_test)
 
-def state_to_log_like(states, data):
+def state_to_log_like(states, data, model):
     sample_mean = tf.reduce_mean(states, axis=[0])
     return model.log_likelihood(data, states)
 
-def state_to_loss(states, data):
+def state_to_loss(states, data, model):
     sample_mean = tf.reduce_mean(states, axis=[0])
     w, _, _ = sep_params(states, num_features)
     return model.loss(data, w)
@@ -54,30 +54,36 @@ def state_to_loss(states, data):
 
 # Defining summary writer
 summary_writer = tf.compat.v2.summary.create_file_writer('/tmp/summary_chain', flush_millis=10000)
-    
+
+# trace_functions for hmc and nuts
 def trace_fn(state, results):
   with tf.compat.v2.summary.record_if(tf.equal(results.step % 10, 0)):
-    tf.compat.v2.summary.scalar("log pred hmc", state_to_log_like(state, data_test), step=tf.cast(results.step, tf.int64))
+    tf.compat.v2.summary.scalar("log pred hmc", state_to_log_like(state, data_test, model), step=tf.cast(results.step, tf.int64))
     return ()
 step_is = 0
 def trace_fn_nuts(state, results):
     global step_is
     step_is +=1
-    tf.summary.scalar("log pred nuts", state_to_log_like(state, data_test), step=step_is)
+    tf.summary.scalar("log pred nuts", state_to_log_like(state, data_test, model), step=step_is)
     return ()
 
 
-# Define the regression model
+
 model = Ard(num_features)
-# Need to have a starting state for HMC and Nuts for chain
+# Define the regression model
+
 joint_log_prob2 = lambda *args: model.joint_log_prob(data_train, *args)
+
 initial_chain_state = model.return_initial_state()
+# Need to have a starting state for HMC and Nuts for chain
 
-
-## Defining kernels for HMC and NUTS
 
 num_results = int(970)
+# not sure why but for HMC num results must be smaller than 970.
+# undergoing investigation...
 num_burnin_steps = int(200)
+
+# Defining kernels for HMC and NUTS
 adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
     tfp.mcmc.HamiltonianMonteCarlo(
         target_log_prob_fn=joint_log_prob2,
@@ -92,7 +98,7 @@ nuts = tfp.mcmc.NoUTurnSampler(
     max_energy_diff=1000.0,
     unrolled_leapfrog_steps=1, parallel_iterations=10, seed=None, name=None)
 
-@tf.function
+@tf.function # tf.function creates a graph of following function.
 def run_chain_hmc():
   print("running hmc chain")
   # Run the chain (with burn-in).
@@ -115,8 +121,6 @@ def run_chain_nuts():
       kernel=nuts,
       trace_fn=trace_fn_nuts)
   return states, is_accepted
-    
-
 
 if(what_to_run == "advi"):
     bij = tfp.bijectors.Log()
