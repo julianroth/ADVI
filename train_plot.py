@@ -39,8 +39,8 @@ print(y_train.shape)
 print(y_test.shape)
 print(x_train.shape)
 print(x_test.shape)
-data_train = (y_train, x_train)
-data_test = (y_test, x_test)
+train_data = (y_train, x_train)
+test_data = (y_test, x_test)
 
 def state_to_log_like(states, data, model):
     sample_mean = tf.reduce_mean(states, axis=[0])
@@ -72,7 +72,7 @@ def trace_fn_nuts(state, results):
 model = Ard(num_features)
 # Define the regression model
 
-joint_log_prob2 = lambda *args: model.joint_log_prob(data_train, *args)
+joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
 
 initial_chain_state = model.return_initial_state()
 # Need to have a starting state for HMC and Nuts for chain
@@ -131,7 +131,7 @@ if(what_to_run == "advi"):
         theta = run_advi(model.num_params,
                          joint_log_prob2,
                          model.log_likelihood,
-                         data_test,
+                         test_data,
                          bijector=bij)
         
 if (what_to_run == "hmc"):
