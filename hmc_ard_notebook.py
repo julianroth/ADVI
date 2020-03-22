@@ -29,9 +29,9 @@ def sep_training_test(y,x,test):
   x_test = x[:,:test]
   return y_train, y_test, x_train, x_test
 what_to_run = "advi"
-num_features = 250
+num_features = 350
 
-y, x, w = make_training_data(1000, num_features, 2)
+y, x, w = make_training_data(1200, num_features, 2)
 y_train, y_test, x_train, x_test = sep_training_test(y,x,100)
 
 print(y_train.shape)
@@ -40,7 +40,6 @@ print(x_train.shape)
 print(x_test.shape)
 data_train = (y_train, x_train)
 data_test = (y_test, x_test)
-
 
 def state_to_log_like(states, data):
     sample_mean = tf.reduce_mean(states, axis=[0])
