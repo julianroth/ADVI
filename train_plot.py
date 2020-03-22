@@ -28,7 +28,7 @@ def sep_training_test(y,x,test):
   y_test = y[:,:test]
   x_test = x[:,:test]
   return y_train, y_test, x_train, x_test
-what_to_run = "hmc"
+what_to_run = "advi"
 num_features = 200
 
 y, x, w = make_training_data(1000, num_features, 2)
@@ -57,14 +57,14 @@ summary_writer = tf.compat.v2.summary.create_file_writer('/tmp/summary_chain', f
 
 # trace_functions for hmc and nuts
 def trace_fn(state, results):
-  with tf.compat.v2.summary.record_if(tf.equal(results.step % 10, 0)):
-    tf.compat.v2.summary.scalar("log pred hmc", state_to_log_like(state, data_test, model), step=tf.cast(results.step, tf.int64))
+  with tf.summary.record_if(tf.equal(results.step % 10, 0)):
+    tf.summary.scalar("log pred hmc", state_to_log_like(state, test_data, model), step=tf.cast(results.step, tf.int64))
     return ()
 step_is = 0
 def trace_fn_nuts(state, results):
     global step_is
     step_is +=1
-    tf.summary.scalar("log pred nuts", state_to_log_like(state, data_test, model), step=step_is)
+    tf.summary.scalar("log pred nuts", state_to_log_like(state, test_data, model), step=step_is)
     return ()
 
 
