@@ -32,7 +32,6 @@ def run_advi(shape, target_log_prob_fn, log_like, test_data, bijector=tfp.biject
     steps = 0
 
     # optimisation loop
-    print("start elbow", advi.elbo())
     while (v < 0 or tf.math.abs(delta_elbo) > epsilon) and (step_limit < 0 or steps < step_limit):
         tf.summary.scalar('elbo', advi.elbo(), step=steps)
         tf.summary.scalar('log likelihood', get_ll_from_advi(test_data, advi, log_like), step=steps)
@@ -42,7 +41,6 @@ def run_advi(shape, target_log_prob_fn, log_like, test_data, bijector=tfp.biject
             delta_elbo = elbo - prev_elbo
             prev_elbo = elbo
         steps = steps + 1
-    print("end elbow", advi.elbo())
     return advi
 
 
