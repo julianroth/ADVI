@@ -27,7 +27,7 @@ what_to_run = "hmc"
 num_features = 200
 
 y, x, w = make_training_data(1000, num_features, 2)
-y_train, y_test, x_train, x_test = sep_training_test(y,x,100)
+y_train, y_test, x_train, x_test = sep_training_test(y,x,10)
 step_size_hmc = 0.001
 
 print(y_train.shape)
