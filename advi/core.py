@@ -1,7 +1,14 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
-from model import ADVIModel
-def run_advi(shape, target_log_prob_fn, bijector=tfp.bijectors.Identity(),
+from advi.model import ADVIModel
+
+def get_ll_from_advi(test_data, advi, log_likelihood):
+    theta_intermediate = advi.sample()
+    theta_intermediate = tf.squeeze(theta_intermediate)
+    likelihood = log_likelihood(test_data, theta_intermediate)
+    return likelihood
+
+def run_advi(shape, target_log_prob_fn, log_like, test_data, bijector=tfp.bijectors.Identity(),
              m=1, v=-1, epsilon=0.01, step_limit=-1):
     """
     :param m: Number of samples used to estimate the gradients.
@@ -26,6 +33,8 @@ def run_advi(shape, target_log_prob_fn, bijector=tfp.bijectors.Identity(),
 
     # optimisation loop
     while (v < 0 or tf.math.abs(delta_elbo) > epsilon) and (step_limit < 0 or steps < step_limit):
+        tf.summary.scalar('elbo', advi.elbo(), step=steps)
+        tf.summary.scalar('log likelihood', get_ll_from_advi(test_data, advi, log_like), step=steps)
         sgd.minimize(advi.neg_elbo, [advi.mu, advi.omega])
         if v > 0:
             elbo = advi.elbo(nsamples=v)

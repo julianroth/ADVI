@@ -2,18 +2,12 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
 from advi.model import ADVIModel
+from advi.core import run_advi
 from models.ard import Ard
 import os
-try:
-  os.rmdir("/tmp/summary_chain/")
-except OSError as e:  ## if failed, report it back to the user ##
-  print("no file")
-#from models.ard import joint_log_prob, return_initial_state, sep_params, log_likelihood, some_kind_of_loss
-# NEXT TO DO MUST CHANGE INITAL CHAIN STATES TO SAMPLE FROM DISTRIBUTION
-# Target distribution is proportional to: `exp(-x (1 + x))`.
 
 #tf.config.experimental_run_functions_eagerly(True)
-what_to_run = "hmc"
+
 # ## Making training data
 def make_training_data(num_samples, dims, sigma):
   """
@@ -34,11 +28,11 @@ def sep_training_test(y,x,test):
   y_test = y[:,:test]
   x_test = x[:,:test]
   return y_train, y_test, x_train, x_test
+what_to_run = "advi"
+num_features = 250
 
-num_features = 10
-
-y, x, w = make_training_data(100, num_features, 2)
-y_train, y_test, x_train, x_test = sep_training_test(y,x,10)
+y, x, w = make_training_data(1000, num_features, 2)
+y_train, y_test, x_train, x_test = sep_training_test(y,x,100)
 
 print(y_train.shape)
 print(y_test.shape)
@@ -84,8 +78,8 @@ initial_chain_state = model.return_initial_state()
 
 # In[6]:
 
-num_results = int(10000)
-num_burnin_steps = int(800)
+num_results = int(3000)
+num_burnin_steps = int(400)
 adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
     tfp.mcmc.HamiltonianMonteCarlo(
         target_log_prob_fn=joint_log_prob2,
@@ -95,7 +89,7 @@ adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
 
 nuts = tfp.mcmc.NoUTurnSampler(
     target_log_prob_fn=joint_log_prob2,
-    step_size=10,
+    step_size=0.1,
     max_tree_depth=10,
     max_energy_diff=1000.0,
     unrolled_leapfrog_steps=1, parallel_iterations=10, seed=None, name=None)
@@ -138,10 +132,10 @@ def run_chain_nuts():
 
 # In[9]:
 
-def get_ll_from_advi(y_test, x_test, advi, regression_model):
+def get_ll_from_advi(y_test, x_test, advi, log_likelihood):
     theta_intermediate = advi.sample()
     theta_intermediate = tf.squeeze(theta_intermediate)
-    likelihood = regression_model.log_likelihood(data_test, theta_intermediate)
+    likelihood = log_likelihood(data_test, theta_intermediate)
     return likelihood
 
 def get_loss_from_advi(y_test, x_test, advi, regression_model):
@@ -150,10 +144,7 @@ def get_loss_from_advi(y_test, x_test, advi, regression_model):
     w, _, _ = regression_model.sep_params(theta_intermediate)
     return regression_model.loss(y_test, x_test, w)
 
-
-# In[10]:
-
-def run_advi(nsteps, step_size, dim, log_prob, bijector, m, regression_model):
+def run_advi_2(nsteps, step_size, dim, log_prob, bijector, m, regression_model):
         advi = ADVIModel(dim, log_prob, bijector, m)
         for t in range(nsteps):
             grad_mu, grad_omega = advi.gradients()
@@ -175,24 +166,17 @@ def run_advi(nsteps, step_size, dim, log_prob, bijector, m, regression_model):
         theta = advi.sample()
         return theta
 
-
-# In[11]:
-
-# target function 
-
-
 if(what_to_run == "advi"):
     bij = tfp.bijectors.Log()
     num_results = 10000
     step_size = 0.001
     # run the advi
     with summary_writer.as_default():
-        theta = run_advi(num_results,
-                         step_size,
-                         model.num_params,
+        theta = run_advi(model.num_params,
                          joint_log_prob2,
-                         bij,
-                         10, model)
+                         model.log_likelihood,
+                         data_test,
+                         bijector=bij)
         
 if (what_to_run == "hmc"):
     with summary_writer.as_default():
