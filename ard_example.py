@@ -1,5 +1,5 @@
 import numpy as np
-from train_plot import run_train
+import train_plot as tp
 from models.ard import Ard
 
 # tf.config.experimental_run_functions_eagerly(True)
@@ -45,7 +45,14 @@ test_data = (y_test, x_test)
 # Define and train model
 
 model = Ard(num_features=num_features)
-run_train(model, "hmc", 0.001, train_data,
-          test_data, num_results=500, num_burnin_steps=100)
+
+# run hmc
+tp.run_train_hmc(model, train_data, test_data,
+                 step_size=0.001, num_results=500, num_burnin_steps=100)
+
+# run advi
+#tp.run_train_advi(model, train_data, test_data,
+#                  step_limit=500)
+
 # good step_size for hmc is 0.1
 # good step_size for advi is 0.001

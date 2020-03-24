@@ -6,11 +6,12 @@ tfd = tfp.distributions
 
 class DirichletExponential:
 
-    def __init__(self):
-        # dimensions from paper (see Section 3.2)
-        self._U = 28
-        self._I = 20
-        self._K = 10
+    def __init__(self, users=28, items=20, factors=10):
+        # dimensions from paper (see Section 3.2):
+        # U = 28, I = 20, K = 10
+        self._U = users
+        self._I = items
+        self._K = factors
         # number of features in data
         self.features = self._U * self._I
         # total number of trainable parameters in model
@@ -59,9 +60,7 @@ class DirichletExponential:
         theta, beta = self.sep_params(params)
         theta = tf.reshape(theta, [self._U, self._K])
         log_theta_prior = tf.reduce_sum(self.theta_prior().log_prob(theta))
-        print(log_theta_prior)
         log_beta_prior = tf.reduce_sum(self.beta_prior().log_prob(beta))
-        print(log_beta_prior)
         return log_like + log_theta_prior + log_beta_prior
 
     def sep_params(self, params):
@@ -81,3 +80,9 @@ class DirichletExponential:
         theta = self.theta_prior().sample(self._U)
         beta = self.beta_prior().sample(self._I * self._K)
         return tf.concat([tf.reshape(theta, [-1]), beta], 0)
+
+    def bijector(self):
+        """
+        returns: bijector associated with this model
+        """
+        return tfp.bijectors.Log()
