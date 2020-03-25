@@ -3,7 +3,8 @@ from advi.model import ADVIModel
 
 
 def run_advi(shape, target_log_prob_fn, bijector, plot_fn=None, plot_name="y",
-             m=1, v=-1, epsilon=0.01, step_limit=-1, p=1, skip_steps=10):
+             m=1, v=-1, epsilon=0.01, step_limit=-1, p=1, skip_steps=10,
+             trace_fn=None):
     """
     :param plot_fn: Function that maps a theta vector (state) to a value
         which will be plotted to TensorBoard. If None, nothing is plotted.
@@ -18,6 +19,8 @@ def run_advi(shape, target_log_prob_fn, bijector, plot_fn=None, plot_name="y",
         likelihood for plotting.
     :param skip_steps: Number of steps skipped before plotting ELBO and log
         likelihood again.
+    :param trace_fn: A tracing function that is called in every optimisation
+        step of ADVI.
     """
     if not tf.is_tensor(epsilon):
         epsilon = tf.constant(epsilon, dtype=tf.float64)
@@ -38,6 +41,8 @@ def run_advi(shape, target_log_prob_fn, bijector, plot_fn=None, plot_name="y",
             tf.summary.scalar('elbo', advi.elbo(p), step=steps)
             tf.summary.scalar(plot_name, get_plot_from_advi(advi, plot_fn, p), step=steps)
         sgd.minimize(advi.neg_elbo, [advi.mu, advi.omega])
+        if trace_fn is not None:
+            trace_fn(advi, steps)
         if v > 0:
             elbo = advi.elbo(nsamples=v)
             delta_elbo = elbo - prev_elbo
