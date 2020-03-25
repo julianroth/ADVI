@@ -109,12 +109,24 @@ class Ard:
         Returns: starting states for HMC and Nuts by sampling from prior
         distribution
         """
+        return self._initial_state_mean()
+
+    def _initial_state_random(self):
         alpha = self.alpha_prior_().sample([self.features])
         tau = self.tau_prior_().sample()
         sigma = tf.math.sqrt(tau)
         tau = tf.reshape(tau, [1])
         one_over_sqrt_alpha = self.convert_alpha(alpha)
         w = self.w_prior_(sigma, one_over_sqrt_alpha).sample()
+        return tf.concat([w, tau, alpha], 0)
+
+    def _initial_state_mean(self):
+        alpha = self.alpha_prior_().mean() * np.ones([self.features])
+        tau = tf.constant(1., dtype=tf.float64)
+        sigma = tf.math.sqrt(tau)
+        tau = tf.reshape(tau, [1])
+        one_over_sqrt_alpha = self.convert_alpha(alpha)
+        w = self.w_prior_(sigma, one_over_sqrt_alpha).mean()
         return tf.concat([w, tau, alpha],0)
 
     def bijector(self):

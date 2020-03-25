@@ -77,8 +77,16 @@ class DirichletExponential:
         returns: starting states for sampling/optimisation from prior
         distributions
         """
+        return self._initial_state_mean()
+
+    def _initial_state_random(self):
         theta = self.theta_prior().sample(self._U)
         beta = self.beta_prior().sample(self._I * self._K)
+        return tf.concat([tf.reshape(theta, [-1]), beta], 0)
+
+    def _initial_state_mean(self):
+        theta = self.theta_prior().mean()[0] * np.ones(self._U * self._K)
+        beta = self.beta_prior().mean() * np.ones(self._I * self._K)
         return tf.concat([tf.reshape(theta, [-1]), beta], 0)
 
     def bijector(self):
