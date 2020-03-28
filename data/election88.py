@@ -10,7 +10,7 @@ def load_data():
     x[:, :3] = x[:, :3] - 1
     # vote for bush or not
     y = df['bush'].to_numpy()
-    return y, x
+    return x, y
 
 # returns prev vote for each state
 def load_prev_vote():

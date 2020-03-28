@@ -5,15 +5,18 @@ from utils.bijectors import IntervalTransform
 tfd = tfp.distributions
 
 class HLR:
-    def __init__(self):
-        self.y, self.x = polls.load_data()
-        self.prev_vote = polls.load_prev_vote()
-        self.data = (self.y, self.x)
+    def __init__(self, num_test=-1, test_split=0.2, permute=False):
+        self._x, self._y = polls.load_data()
+        self._prev_vote = polls.load_prev_vote()
 
-        # lower and upper bound for variables with uniform prior
+        self._train_data, self._test_data =\
+            sep_training_test(self._x, self._y, num_test=num_test, test_split=test_split, permute=permute)
+
+        # lower and upper bound for stds
         self._ulb = tf.constant(0, dtype=tf.float64)
         self._uub = tf.constant(100, dtype=tf.float64)
 
+        # mean and std for beta parameters
         self._beta_mean = tf.constant(0, dtype=tf.float64)
         self._beta_std = tf.constant(100, dtype=tf.float64)
 
@@ -23,14 +26,17 @@ class HLR:
         self._n_age_edu = self._n_age * self._n_edu
         self._n_region = 5
         self._n_state = 51
+
+        # number of parameters
         self._n_alpha = self._n_age + self._n_edu + self._n_age_edu + self._n_region + self._n_state
         self._n_beta = 5
-
         self.num_params = 2*self._n_alpha + self._n_beta
+
         # Copied from the book's code
         # Regions:  1=northeast, 2=south, 3=north central, 4=west, 5=d.c.
         # We have to insert d.c. (it is the 9th "state" in alphabetical order)
-        self._regions = [3,4,4,3,4,4,1,1,5,3,3,4,4,2,2,2,2,3,3,1,1,1,2,2,3,2,4,2,4,1,1,4,1,3,2,2,3,4,1,1,3,2,3,3,4,1,3,4,1,2,4]
+        self._regions = np.array([3,4,4,3,4,4,1,1,5,3,3,4,4,2,2,2,2,3,3,1,1,1,2,2,3,2,4,2,4,1,1,4,1,3,2,2,3,4,1,1,3,2,3,3,4,1,3,4,1,2,4],\
+            dtype=int) - 1
 
     def std_prior(self):
         return tfd.Uniform(self._ulb, self._uub)
@@ -48,7 +54,7 @@ class HLR:
         s = self._n_age + self._n_edu + self._n_age_edu
         alpha_region = alphas[s:s + self._n_region]
         std_state = stds[-self._n_state:]
-        return tfd.Normal(alpha_region + beta_prev_vote * self.prev_vote, std_state)
+        return tfd.Normal(alpha_region + beta_prev_vote * self._prev_vote, std_state)
 
 
     def log_prior(self, params):
@@ -62,7 +68,7 @@ class HLR:
         return beta_log_prob + alpha_log_prob + std_log_prob
 
     def log_likelihood(self, data, params):
-        y, x = data
+        x, y = data
         betas, alphas, stds = sep_params(params)
         alpha_age, alpha_edu, alpha_age_edu, alpha_region, alpha_state = sep_alphas(alphas)
         regions = self._regions[x[:, 0]]

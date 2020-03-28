@@ -1,12 +1,17 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
 from data import frey_face
+from utils.bijectors import LogOrdered
+from utils.sep_data import sep_training_test
 tfd = tfp.distributions
 
 # This implements the constrained gamma poisson distribution from 3.2
 class Gamma_Poisson():
-    def __init__(self):
+    def __init__(self, num_test=-1, test_split=0.2, permute=False):
         self._data = frey_face.load_data()
+
+        self._train_data, self._test_data =\
+            sep_training_test(self._data, num_test=num_test, test_split=test_split, permute=permute)
 
         self._K = 10
         self._U = 28
@@ -60,5 +65,11 @@ class Gamma_Poisson():
             return tf.concat([tf.tile(self.theta_prior.mean(), [self._U*self._K]),
                               tf.tile(self.beta_prior.mean(), [self._K * self._I])])
 
-    def bijector(self):
-        return tfp.bijectors.Log()
+    def bijector(self, ordered=True):
+        tfb = tfp.bijectors
+        if ordered:
+            bjs = [LogOrdered() for _ in range(self._U)] + [tfb.Log()]
+            sizes = [self._K for _ in range(self._U)] + [self._K * self._I]
+            return tfb.Blockwise(bjs, sizes)
+        else:
+            return tfb.Log()

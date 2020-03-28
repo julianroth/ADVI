@@ -7,7 +7,7 @@ tfb = tfp.bijectors
 def Logme(epsilon=1e-9, validate_args=False, name='logpe'):
     return tfb.Chain([tfb.Shift(-epsilon), tfb.Log()], validate_args=validate_args, name=name)
 
-#
+# mapping between ordered positive reals and reals
 def LogOrdered(validate_args=False, name='log_ordered'):
     return tfb.Chain([tfb.Log(), tfp.Ordered()], validate_args=validate_args, name=name)
 
