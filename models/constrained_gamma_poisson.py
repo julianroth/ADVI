@@ -28,13 +28,13 @@ class Gamma_Poisson():
         self.beta_prior = tfd.Gamma(self._c_0, self._d_0)
 
     def prior_log_prob(self, params):
-        theta, beta = sep_params(params)
+        theta, beta = self.sep_params(params)
         theta_prob = self.theta_prior.log_prob(theta)
         beta_prob = self.beta_prior.log_prob(beta)
         return tf.math.reduce_sum(theta_prob) + tf.math.reduce_sum(beta_prob)
 
     def log_likelihood(self, data, params):
-        theta, beta = sep_params(params)
+        theta, beta = self.sep_params(params)
         theta = tf.reshape(theta, [self._U, self._K])
         beta = tf.reshape(beta, [self._K, self._I])
         poisson_params = tf.linalg.matmul(theta, beta)

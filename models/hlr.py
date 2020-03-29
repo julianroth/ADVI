@@ -1,7 +1,8 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
+import numpy as np
 import data.election88 as polls
-from utils.bijectors import IntervalTransform
+from utils.sep_data import sep_training_test
 tfd = tfp.distributions
 
 class HLR:
@@ -54,32 +55,32 @@ class HLR:
         s = self._n_age + self._n_edu + self._n_age_edu
         alpha_region = alphas[s:s + self._n_region]
         std_state = stds[-self._n_state:]
-        return tfd.Normal(alpha_region + beta_prev_vote * self._prev_vote, std_state)
+        return tfd.Normal(tf.gather(alpha_region, self._regions) + beta_prev_vote * self._prev_vote, std_state)
 
 
     def log_prior(self, params):
-        betas, alphas, stds = sep_params(params)
+        betas, alphas, stds = self.sep_params(params)
         alpha_state = alphas[-self._n_state:]
         alphas_no_state = alphas[:-self._n_state]
-        beta_log_prob = tf.math.reduce_sum(beta_prior().log_prob(betas))
-        alpha_log_prob = tf.math.reduce_sum(alpha_prior(stds).log_prob(alphas_no_state)) +\
-                         tf.math.reduce_sum(alpha_state_prior(betas, alphas, stds).log_prob(alpha_state))
-        std_log_prob = tf.math.reduce_sum(std_prior().log_prob(stds))
+        beta_log_prob = tf.math.reduce_sum(self.beta_prior().log_prob(betas))
+        alpha_log_prob = tf.math.reduce_sum(self.alpha_prior(stds).log_prob(alphas_no_state)) +\
+                         tf.math.reduce_sum(self.alpha_state_prior(betas, alphas, stds).log_prob(alpha_state))
+        std_log_prob = tf.math.reduce_sum(self.std_prior().log_prob(stds))
         return beta_log_prob + alpha_log_prob + std_log_prob
 
     def log_likelihood(self, data, params):
         x, y = data
-        betas, alphas, stds = sep_params(params)
-        alpha_age, alpha_edu, alpha_age_edu, alpha_region, alpha_state = sep_alphas(alphas)
+        betas, alphas, stds = self.sep_params(params)
+        alpha_age, alpha_edu, alpha_age_edu, alpha_region, alpha_state = self.sep_alphas(alphas)
         regions = self._regions[x[:, 0]]
         age_edu = self._n_age * x[:, 2] + x[:, 1]
-        y_hat = betas[0] + betas[1] * x[:, 3] + betas[2] * x[:, 4] + alpha_region[regions] + alpha_age[x[:, 2]] +\
-                alpha_edu[x[:, 1]] + alpha_age_edu[age_edu] + alpha_state[x[:, 0]]
+        y_hat = betas[0] + betas[1] * x[:, 3] + betas[2] * x[:, 4] + tf.gather(alpha_region, regions) + tf.gather(alpha_age, x[:, 2]) +\
+                tf.gather(alpha_edu, x[:, 1]) + tf.gather(alpha_age_edu, age_edu) + tf.gather(alpha_state, x[:, 0])
         return tf.math.reduce_sum(tf.math.sigmoid(y_hat))
 
 
     def joint_log_prob(self, data, params):
-        return log_prior(params) + log_likelihood(data, params)
+        return self.log_prior(params) + self.log_likelihood(data, params)
 
     def sep_params(self, params):
         """
@@ -126,4 +127,4 @@ class HLR:
 
     def bijector(self):
         tfb = tfp.bijectors
-        return tfb.Blockwise([tfb.Identity(), IntervalTransform()], [self._n_beta + self._n_alpha, self._n_alpha])
+        return tfb.Blockwise([tfb.Identity(), tfb.Sigmoid(self._ulb, self._uub)], [self._n_beta + self._n_alpha, self._n_alpha])
