@@ -76,7 +76,7 @@ class HLR:
         age_edu = self._n_age * x[:, 2] + x[:, 1]
         y_hat = betas[0] + betas[1] * x[:, 3] + betas[2] * x[:, 4] + tf.gather(alpha_region, regions) + tf.gather(alpha_age, x[:, 2]) +\
                 tf.gather(alpha_edu, x[:, 1]) + tf.gather(alpha_age_edu, age_edu) + tf.gather(alpha_state, x[:, 0])
-        return tf.math.reduce_sum(tf.math.sigmoid(y_hat))
+        return tf.math.reduce_sum(tf.math.log_sigmoid(y_hat))
 
 
     def joint_log_prob(self, data, params):
