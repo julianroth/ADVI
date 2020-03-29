@@ -44,6 +44,10 @@ class Gamma_Poisson():
         #log_prob = tf.math.reduce_mean(log_prob, axis=0)
         return tf.math.reduce_sum(log_prob)
 
+    def avg_log_likelihood(self, data, params):
+        # TODO implement
+        return self.log_likelihood(data, params)
+
     def joint_log_prob(self, data, params):
         return self.prior_log_prob(params) + self.log_likelihood(data, params)
 

@@ -50,6 +50,14 @@ class DirichletExponential:
         rates = tf.reshape(tf.linalg.matmul(theta, beta), [-1])
         return tf.reduce_sum(self.likelihood(rates).log_prob(data))
 
+
+    def avg_log_likelihood(self, data, params):
+        """
+        returns: log likelihood P(D | theta, beta) / #data
+        """
+        (ndata,_) = data.shape
+        return self.log_likelihood(data, params) / float(ndata)
+
     def joint_log_prob(self, data, params):
         """
         returns: joint log probability

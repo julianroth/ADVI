@@ -9,15 +9,15 @@ def run_train_advi(model, train_data, test_data,
                    step_limit=100, m=1, p=1, skip_steps=10):
     # set up joint_log_prob and log_likelihood with training and test data
     joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
-    log_likelihood2 = lambda *args: model.log_likelihood(test_data, *args)
+    avg_log_likelihood2 = lambda *args: model.avg_log_likelihood(test_data, *args)
 
     # set up trace function for advi
     def trace_fn(advi, step):
         #print(step)
         if step % skip_steps == 0:
             logger.log_step("elbo", advi.elbo(p), step)
-            logger.log_step("log pred advi",
-                            advi_to_log_like(advi, log_likelihood2, p), step)
+            logger.log_step("avg log pred advi",
+                            advi_to_avg_log_like(advi, avg_log_likelihood2, p), step)
 
     # run advi
     print("running ADVI")
@@ -44,8 +44,8 @@ def run_train_hmc(model, train_data, test_data, step_size,
     def trace_fn(state, results):
         #print("Step {}".format(results.step))
         if results.step % skip_steps == 0:
-            logger.log_step("log pred hmc",
-                            "{}".format(state_to_log_like(state, test_data, model)),
+            logger.log_step("avg log pred hmc",
+                            "{}".format(state_to_avg_log_like(state, test_data, model)),
                             results.step)
         return ()
 
@@ -94,8 +94,8 @@ def run_train_nuts(model, train_data, test_data, step_size,
         step = num_burnin_steps + logger.counter()
         #print(step)
         if step % skip_steps == 0:
-            logger.log_step("log pred nuts",
-                            "{}".format(state_to_log_like(state, test_data, model)),
+            logger.log_step("avg log pred nuts",
+                            "{}".format(state_to_avg_log_like(state, test_data, model)),
                             step)
         return ()
 
@@ -136,14 +136,14 @@ def run_train_nuts(model, train_data, test_data, step_size,
     return states
 
 
-def state_to_log_like(states, data, model):
+def state_to_avg_log_like(states, data, model):
     sample_mean = tf.reduce_mean(states, axis=[0])
-    return model.log_likelihood(data, states)
+    return model.avg_log_likelihood(data, states)
 
 
-def advi_to_log_like(advi, log_like, nsamples):
+def advi_to_avg_log_like(advi, avg_log_like, nsamples):
     theta_intermediate = advi.sample(nsamples)
-    value = tf.reduce_mean(tf.map_fn(log_like, theta_intermediate))
+    value = tf.reduce_mean(tf.map_fn(avg_log_like, theta_intermediate))
     return value
 
 

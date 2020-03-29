@@ -78,6 +78,9 @@ class HLR:
                 tf.gather(alpha_edu, x[:, 1]) + tf.gather(alpha_age_edu, age_edu) + tf.gather(alpha_state, x[:, 0])
         return tf.math.reduce_sum(tf.math.log_sigmoid(y_hat))
 
+    def avg_log_likelihood(self, data, params):
+        # TODO implement
+        return self.log_likelihood(data, params)
 
     def joint_log_prob(self, data, params):
         return self.log_prior(params) + self.log_likelihood(data, params)

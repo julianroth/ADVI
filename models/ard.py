@@ -58,6 +58,17 @@ class Ard:
             tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y))
         return log_likelihood_
 
+    def avg_log_likelihood(self, data, params):
+        """
+        input data: (y, x) with y as target data and x as data
+        input params: all trainable parameters in model
+        returns: average log likelihood
+        P(D|theta) / #data
+        """
+        y, _ = data
+        _, ndata = y.shape
+        return self.log_likelihood(data, params) / float(ndata)
+
     def joint_log_prob(self, data, params):
         """
         input data: (y, x) with y as target data and x as data
