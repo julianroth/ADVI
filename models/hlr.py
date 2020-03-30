@@ -130,4 +130,4 @@ class HLR:
 
     def bijector(self):
         tfb = tfp.bijectors
-        return tfb.Blockwise([tfb.Identity(), tfb.Sigmoid(self._ulb, self._uub)], [self._n_beta + self._n_alpha, self._n_alpha])
+        return tfb.Blockwise([tfb.Identity(), tfb.Invert(tfb.Sigmoid(self._ulb, self._uub))], [self._n_beta + self._n_alpha, self._n_alpha])

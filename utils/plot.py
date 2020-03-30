@@ -27,6 +27,7 @@ def plot(advi_file, advi_file_2=None, hmc_file=None, nuts_file=None, time_log_sc
     save_file : str
         optional file name for saving the plots, format (e.g. png or jpeg) will be inferred from file name
     """
+    plt.clf()
     labels = []
     advi_df = pd.read_csv(advi_file)
     if advi_file_2 is not None:
@@ -78,12 +79,13 @@ def create_dataframe(df, algorithm, label=None):
                          'Label' : label})
     return data
 
+
 if __name__ == '__main__':
     sample_logs_directory = 'utils/sample_logs/'
     plot(sample_logs_directory + 'advi.csv', sample_logs_directory + 'advi_2.csv',
          sample_logs_directory + 'hmc.csv', sample_logs_directory + 'nuts.csv', save_file='test.png')
     plot(sample_logs_directory + 'advi.csv', sample_logs_directory + 'advi_2.csv',
-         sample_logs_directory + 'hmc.csv')
+         sample_logs_directory + 'hmc.csv', None)
     plot(sample_logs_directory + 'advi.csv', None,
          sample_logs_directory + 'hmc.csv', sample_logs_directory + 'nuts.csv')
     plot(sample_logs_directory + 'advi.csv', sample_logs_directory + 'advi_2.csv',

@@ -72,8 +72,10 @@ class Gamma_Poisson():
     def bijector(self, ordered=True):
         tfb = tfp.bijectors
         if ordered:
-            bjs = [LogOrdered() for _ in range(self._U)] + [tfb.Log()]
-            sizes = [self._K for _ in range(self._U)] + [self._K * self._I]
-            return tfb.Blockwise(bjs, sizes)
+            simpl = LogOrdered()
+            res_orig = tfb.Reshape([self._U, self._K])
+            res_trans = tfb.Invert(tfb.Reshape([self._U, self._K]))
+            ordered_log = tfb.Chain([res_trans, simpl, res_orig])
+            return tfb.Blockwise([ordered_log, tfb.Log()], [self._U * self._K, self._K * self._I])
         else:
             return tfb.Log()
