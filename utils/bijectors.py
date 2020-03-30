@@ -9,4 +9,4 @@ def Logme(epsilon=1e-9, validate_args=False, name='logpe'):
 
 # mapping between ordered positive reals and reals
 def LogOrdered(validate_args=False, name='log_ordered'):
-    return tfb.Chain([tfb.Log(), tfb.Ordered()], validate_args=validate_args, name=name)
+    return tfb.Chain([tfb.Ordered(), tfb.Log()], validate_args=validate_args, name=name)

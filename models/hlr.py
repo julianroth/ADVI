@@ -79,8 +79,9 @@ class HLR:
         return tf.math.reduce_sum(tf.math.log_sigmoid(y_hat))
 
     def avg_log_likelihood(self, data, params):
-        # TODO implement
-        return self.log_likelihood(data, params)
+        _, y = data
+        (ndata,) = y.shape
+        return self.log_likelihood(data, params) / float(ndata)
 
     def joint_log_prob(self, data, params):
         return self.log_prior(params) + self.log_likelihood(data, params)
@@ -130,4 +131,5 @@ class HLR:
 
     def bijector(self):
         tfb = tfp.bijectors
-        return tfb.Blockwise([tfb.Identity(), tfb.Sigmoid(self._ulb, self._uub)], [self._n_beta + self._n_alpha, self._n_alpha])
+        return tfb.Blockwise([tfb.Identity(), tfb.Invert(tfb.Sigmoid(self._ulb, self._uub))],
+                             [self._n_beta + self._n_alpha, self._n_alpha])
