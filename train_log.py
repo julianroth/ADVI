@@ -61,7 +61,7 @@ def run_train_hmc(model, train_data, test_data, step_size,
     # this function operates at every step of the chain
     def trace_fn(state, results):
         #print("Step {}".format(results.step))
-        if results.step % skip_steps == 0:
+        if if((results.step % skip_steps == 0) or (results.step < 100)):
             logger.log_step("avg log pred hmc",
                             "{}".format(state_to_avg_log_like(state, test_data, model)),
                             results.step)
@@ -111,7 +111,7 @@ def run_train_nuts(model, train_data, test_data, step_size,
     def trace_fn_nuts(state, results):
         step = num_burnin_steps + logger.counter()
         #print(step)
-        if step % skip_steps == 0:
+        if if((step % skip_steps == 0) or (step < 100))::
             logger.log_step("avg log pred nuts",
                             "{}".format(state_to_avg_log_like(state, test_data, model)),
                             step)
