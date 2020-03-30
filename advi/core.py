@@ -2,22 +2,13 @@ import tensorflow as tf
 from advi.model import ADVIModel
 
 
-def run_advi(shape, target_log_prob_fn, bijector, plot_name="y",
-             m=1, epsilon=0.01, step_limit=-1, p=1, skip_steps=10,
-             trace_fn=None):
+def run_advi(shape, target_log_prob_fn, bijector,
+             m=1, epsilon=0.01, step_limit=-1, trace_fn=None):
     """
-        which will be plotted to TensorBoard. If None, nothing is plotted.
-    :param plot_name: Label of the vertical axis in the plot of plot_fn.
     :param m: Number of samples used to estimate the gradients.
-    :param v: Number of samples used to estimate the ELBO. If the change in
-        the ELBO falls below epsilon, the optimisation stops. If v=-1, then
-        this stopping criterion is ignored.
+    :param epsilon: If the ELBO changes less than epsilon, ADVI terminates.
     :param step_limit: After step_limit steps, the optimisation is forced to
         terminate. If step_limit=-1, then this stopping criterion is ignored.
-    :param p: Number of samples used to estimate the ELBO and the log
-        likelihood for plotting.
-    :param skip_steps: Number of steps skipped before plotting ELBO and log
-        likelihood again.
     :param trace_fn: A tracing function that is called in every optimisation
         step of ADVI.
     """
@@ -45,6 +36,7 @@ def run_advi(shape, target_log_prob_fn, bijector, plot_name="y",
         prev_elbo = elbo
         steps = steps + 1
     return advi
+
 
 def run_advi_old(shape, target_log_prob_fn, bijector, plot_name="y",
              m=1, v=-1, epsilon=0.01, step_limit=-1, p=1, skip_steps=10,
