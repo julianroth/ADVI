@@ -14,7 +14,7 @@ def run_train_advi(model, train_data, test_data,
     # set up trace function for advi
     def trace_fn(advi, step):
         #print(step)
-        if step % skip_steps == 0:
+        if((step % skip_steps == 0) or (step < 100)):
             if(old==True):
                 logger.log_step("elbo", advi.elbo(p), step)
                 logger.log_step("avg log pred advi",
