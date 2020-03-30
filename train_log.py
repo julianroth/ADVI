@@ -26,7 +26,10 @@ def run_train_advi(model, train_data, test_data,
                                 advi_to_avg_log_like(advi, avg_log_likelihood2, p), step)
 
     # run advi
-    print("running ADVI")
+    if(old==True):
+        print("running old ADVI")
+    else:
+        print("running new ADVI")
     # set up logger and run chain
     filename = "./logs/{}_advi.csv".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     logger = Logger(filename)

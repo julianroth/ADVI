@@ -3,7 +3,7 @@ from advi.model import ADVIModel
 
 
 def run_advi(shape, target_log_prob_fn, bijector, plot_name="y",
-             m=1, v=-1, epsilon=0.01, step_limit=-1, p=1, skip_steps=10,
+             m=1, epsilon=0.01, step_limit=-1, p=1, skip_steps=10,
              trace_fn=None):
     """
         which will be plotted to TensorBoard. If None, nothing is plotted.
@@ -30,19 +30,19 @@ def run_advi(shape, target_log_prob_fn, bijector, plot_name="y",
     #sgd = tf.keras.optimizers.Adam(learning_rate=0.1)
 
     # initialise stopping criteria
-    prev_elbo = advi.elbo(nsamples=v) if v > 0 else 0.
+    prev_elbo = advi.elbo()
     delta_elbo = 10 * epsilon
     steps = 1
 
     # optimisation loop
-    while (v < 0 or tf.math.abs(delta_elbo) > epsilon) and (step_limit < 0 or steps <= step_limit):
+    while (tf.math.abs(delta_elbo) > epsilon) and (step_limit < 0 or steps <= step_limit):
+        # kept in steps, useful for debugging / terminating training for now
         sgd.minimize(advi.neg_elbo, [advi.mu, advi.omega])
         if trace_fn is not None:
             trace_fn(advi, steps)
-        if v > 0:
-            elbo = advi.elbo(nsamples=v)
-            delta_elbo = elbo - prev_elbo
-            prev_elbo = elbo
+        elbo = advi.current_elbo
+        delta_elbo = elbo - prev_elbo
+        prev_elbo = elbo
         steps = steps + 1
     return advi
 
