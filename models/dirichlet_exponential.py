@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
 tfd = tfp.distributions
+tfb = tfp.bijectors
 
 
 class DirichletExponential:
@@ -93,7 +94,7 @@ class DirichletExponential:
         return tf.concat([tf.reshape(theta, [-1]), beta], 0)
 
     def _initial_state_mean(self):
-        theta = self.theta_prior().mean()[0] * np.ones(self._U * self._K)
+        theta = tf.tile(self.theta_prior().mean(), [self._U])
         beta = self.beta_prior().mean() * np.ones(self._I * self._K)
         return tf.concat([tf.reshape(theta, [-1]), beta], 0)
 
@@ -101,4 +102,8 @@ class DirichletExponential:
         """
         returns: bijector associated with this model
         """
-        return tfp.bijectors.Log()
+        simpl = tfb.Invert(tfb.IteratedSigmoidCentered())
+        res_orig = tfb.Reshape([self._U, self._K])
+        res_trans = tfb.Invert(tfb.Reshape([self._U, self._K]))
+        simpl_chain = tfb.Chain([res_trans, tfb.Pad(), simpl, res_orig])
+        return tfb.Blockwise([simpl_chain, tfb.Log()], [self._U * self._K, self._I * self._K])

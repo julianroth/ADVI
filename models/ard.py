@@ -144,4 +144,5 @@ class Ard:
         """
         returns: bijector associated with this model
         """
-        return tfp.bijectors.Log()
+        return tfp.bijectors.Blockwise([tfp.bijectors.Identity(), tfp.bijectors.Log()],
+                                        [self.features, self.features+1])
