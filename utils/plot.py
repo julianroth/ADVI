@@ -28,7 +28,9 @@ def plot(advi_file, advi_file_2=None, hmc_file=None, nuts_file=None, time_log_sc
         optional file name for saving the plots
     """
     # style of graph
+
     colors = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c"]
+    colors = ["#9b59b6"]
     sns.set_style("ticks", {'axes.grid' : False,
                             'axes.spines.right' : False,
                             'axes.spines.top' : False,
@@ -80,5 +82,6 @@ def create_dataframe(df, algorithm, label=None):
 
 
 sample_logs_directory = 'utils/sample_logs/'
-plot(sample_logs_directory + 'advi.csv', sample_logs_directory + 'advi_2.csv',
-     sample_logs_directory + 'hmc.csv', sample_logs_directory + 'nuts.csv')
+#plot(sample_logs_directory + 'advi.csv', sample_logs_directory + 'advi_2.csv',
+#     sample_logs_directory + 'hmc.csv', sample_logs_directory + 'nuts.csv')
+plot('~/ADVI/logs/' + '20200330-111228_advi.csv')

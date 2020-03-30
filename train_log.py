@@ -1,12 +1,12 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
-from advi.core import run_advi
+from advi.core import run_advi_old, run_advi
 import datetime
 import time
 
 
 def run_train_advi(model, train_data, test_data,
-                   step_limit=100, m=1, p=1, skip_steps=10):
+                   step_limit=100, m=1, p=1, skip_steps=10, old=False):
     # set up joint_log_prob and log_likelihood with training and test data
     joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
     avg_log_likelihood2 = lambda *args: model.avg_log_likelihood(test_data, *args)
@@ -15,21 +15,36 @@ def run_train_advi(model, train_data, test_data,
     def trace_fn(advi, step):
         #print(step)
         if step % skip_steps == 0:
-            logger.log_step("elbo", advi.elbo(p), step)
-            logger.log_step("avg log pred advi",
-                            advi_to_avg_log_like(advi, avg_log_likelihood2, p), step)
+            if(old==True):
+                logger.log_step("elbo", advi.elbo(p), step)
+                logger.log_step("avg log pred advi",
+                                advi_to_avg_log_like(advi, avg_log_likelihood2, p), step)
+            else:
+                # run new function which does not re calc the elbo
+                logger.log_step("elbo", advi.current_elbo, step)
+                logger.log_step("avg log pred advi",
+                                advi_to_avg_log_like(advi, avg_log_likelihood2, p), step)
 
     # run advi
     print("running ADVI")
     # set up logger and run chain
     filename = "./logs/{}_advi.csv".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     logger = Logger(filename)
-    advi_res = run_advi(shape=model.num_params,
-                        target_log_prob_fn=joint_log_prob2,
-                        bijector=model.bijector(),
-                        m=m,
-                        step_limit=step_limit,
-                        trace_fn=trace_fn)
+    if(old==True):
+        advi_res = run_advi_old(shape=model.num_params,
+                                target_log_prob_fn=joint_log_prob2,
+                                bijector=model.bijector(),
+                                m=m,
+                                step_limit=step_limit,
+                                trace_fn=trace_fn)
+    else:
+        advi_res = run_advi(shape=model.num_params,
+                            target_log_prob_fn=joint_log_prob2,
+                            bijector=model.bijector(),
+                            m=m,
+                            step_limit=step_limit,
+                            trace_fn=trace_fn)
+        
     logger.close()
     print("advi done")
 
