@@ -24,7 +24,8 @@ class ADVIModel(tf.keras.Model):
         # model parameters
         self.mu = tf.Variable(np.zeros(self._dim), dtype=tf.float64, trainable=True)
         self.omega = tf.Variable(np.zeros(self._dim), dtype=tf.float64, trainable=True)
-
+        self.current_elbo = None
+        
     def _sample_eta(self, nsamples=1):
         """Produces samples from the underlying Normal distribution.
             :arg nsamples: (int) Number of samples (1 by default).
@@ -72,8 +73,9 @@ class ADVIModel(tf.keras.Model):
         inner = tf.add(tf.map_fn(self._log_prob, theta),
                        tf.map_fn(self._inv_log_det_T, zeta))
         assert inner.shape == (nsamples,)
-
-        return tf.reduce_mean(inner) + tf.reduce_sum(self.omega)
+        elbo_is = tf.reduce_mean(inner) + tf.reduce_sum(self.omega) 
+        self.current_elbo = elbo_is
+        return elbo_is
 
     def neg_elbo(self, nsamples=-1):
         elbo = self.elbo(nsamples=nsamples)
