@@ -45,8 +45,8 @@ class Gamma_Poisson():
         return tf.math.reduce_sum(log_prob)
 
     def avg_log_likelihood(self, data, params):
-        # TODO implement
-        return self.log_likelihood(data, params)
+        ndata, _ = data.shape
+        return self.log_likelihood(data, params) / float(ndata * self._U * self._I)
 
     def joint_log_prob(self, data, params):
         return self.prior_log_prob(params) + self.log_likelihood(data, params)
@@ -63,11 +63,12 @@ class Gamma_Poisson():
 
     def return_initial_state(self, random=False):
         if random:
-            return tf.concat([self.theta_prior.sample(self._U*self._K),
-                              self.beta_prior.sample(self._K * self._I)], axis=0)
+            return tf.concat([sorted(self.theta_prior.sample(self._K)) for _ in range(self._U)] +
+                             [self.beta_prior.sample(self._K * self._I)], axis=0)
         else:
-            return tf.concat([tf.tile(self.theta_prior.mean(), [self._U*self._K]),
-                              tf.tile(self.beta_prior.mean(), [self._K * self._I])])
+            theta_init = tf.constant([0.2 + i * 0.2 for i in range(self._K)], dtype=tf.float64)
+            return tf.concat([tf.tile(theta_init, [self._U]),
+                              tf.repeat(self.beta_prior.mean(), self._K * self._I)], axis=0)
 
     def bijector(self, ordered=True):
         tfb = tfp.bijectors

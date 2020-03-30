@@ -56,8 +56,8 @@ class DirichletExponential:
         """
         returns: log likelihood P(D | theta, beta) / #data
         """
-        (ndata,_) = data.shape
-        return self.log_likelihood(data, params) / float(ndata)
+        ndata, _ = data.shape
+        return self.log_likelihood(data, params) / float(ndata * self._U * self._I)
 
     def joint_log_prob(self, data, params):
         """
@@ -107,3 +107,4 @@ class DirichletExponential:
         res_trans = tfb.Invert(tfb.Reshape([self._U, self._K]))
         simpl_chain = tfb.Chain([res_trans, tfb.Pad(), simpl, res_orig])
         return tfb.Blockwise([simpl_chain, tfb.Log()], [self._U * self._K, self._I * self._K])
+

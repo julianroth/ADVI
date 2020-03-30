@@ -5,7 +5,8 @@ from models.hlr import HLR
 model = HLR(permute=True)
 
 # run advi
-tl.run_train_advi(model, model._train_data, model._test_data, skip_steps=10)
+tl.run_train_advi(model, model._train_data, model._test_data,
+                  step_limit=1000)
 
 # run hmc
 #tl.run_train_hmc(model, train_data, test_data,

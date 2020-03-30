@@ -90,3 +90,4 @@ if __name__ == '__main__':
          sample_logs_directory + 'hmc.csv', sample_logs_directory + 'nuts.csv')
     plot(sample_logs_directory + 'advi.csv', sample_logs_directory + 'advi_2.csv',
          None, sample_logs_directory + 'nuts.csv')
+
