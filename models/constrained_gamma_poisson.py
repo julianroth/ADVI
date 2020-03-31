@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
 from data import frey_face
-from utils.bijectors import LogOrdered
+from utils.bijectors import LogOrdered, positive_ordered
 from utils.sep_data import sep_training_test
 tfd = tfp.distributions
 
@@ -73,7 +73,8 @@ class Gamma_Poisson():
     def bijector(self, ordered=True):
         tfb = tfp.bijectors
         if ordered:
-            simpl = LogOrdered()
+            #simpl = LogOrdered()
+            simpl = positive_ordered()
             res_orig = tfb.Reshape([self._U, self._K])
             res_trans = tfb.Invert(tfb.Reshape([self._U, self._K]))
             ordered_log = tfb.Chain([res_trans, simpl, res_orig])
