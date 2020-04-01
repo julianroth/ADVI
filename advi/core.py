@@ -3,7 +3,7 @@ from advi.model import ADVIModel
 
 
 def run_advi(shape, target_log_prob_fn, bijector,
-             m=1, epsilon=0.01, step_limit=-1, trace_fn=None):
+             m=1, epsilon=0.01, step_limit=-1, trace_fn=None, lr=0.1):
     """
     :param m: Number of samples used to estimate the gradients.
     :param epsilon: If the ELBO changes less than epsilon, ADVI terminates.
@@ -17,7 +17,7 @@ def run_advi(shape, target_log_prob_fn, bijector,
 
     # initialise advi kernel and optimizer
     advi = ADVIModel(shape, target_log_prob_fn, bijector, m)
-    sgd = tf.keras.optimizers.Adagrad(learning_rate=0.1, epsilon=1)
+    sgd = tf.keras.optimizers.Adagrad(learning_rate=lr, epsilon=1)
     #sgd = tf.keras.optimizers.Adam(learning_rate=0.1, epsilon=1)
 
     # initialise stopping criteria
