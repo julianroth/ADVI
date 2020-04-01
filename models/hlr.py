@@ -119,14 +119,14 @@ class HLR:
         """
         # currently no special state for alpha_state
         # mean of stds for alpha prior
-        stds = self.std_prior().mean() * tf.ones([self._n_alpha], dtype=tf.float64)
+        stds = self.std_prior().mean() * tf.ones([self._n_alpha + self._n_state], dtype=tf.float64)
         if random:
             return tf.concat([self.beta_prior().sample(self._n_beta),
                               self.alpha_prior(stds).sample(self._n_alpha),
                               self.std_prior().sample(self._n_alpha)], axis=0)
         else:
             return tf.concat([self.beta_prior().mean() * tf.ones([self._n_beta], dtype=tf.float64),
-                              self.alpha_prior(stds).mean() * tf.ones([self._n_alpha], dtype=tf.float64),
+                              self.alpha_prior(stds).mean(),
                               self.std_prior().mean() * tf.ones([self._n_alpha], dtype=tf.float64)], axis=0)
 
     def bijector(self):
