@@ -81,13 +81,4 @@ def create_dataframe(df, algorithm, label=None):
 
 
 if __name__ == '__main__':
-    sample_logs_directory = 'utils/sample_logs/'
-    plot(sample_logs_directory + 'advi.csv', sample_logs_directory + 'advi_2.csv',
-         sample_logs_directory + 'hmc.csv', sample_logs_directory + 'nuts.csv', save_file='test.png')
-    plot(sample_logs_directory + 'advi.csv', sample_logs_directory + 'advi_2.csv',
-         sample_logs_directory + 'hmc.csv', None)
-    plot(sample_logs_directory + 'advi.csv', None,
-         sample_logs_directory + 'hmc.csv', sample_logs_directory + 'nuts.csv')
-    plot(sample_logs_directory + 'advi.csv', sample_logs_directory + 'advi_2.csv',
-         None, sample_logs_directory + 'nuts.csv')
-
+    plot('~/ADVI/logs/20200401-081700_advi.csv', advi_file_2='~/ADVI/logs/20200401-081731_advi.csv', hmc_file='~/ADVI/logs/20200331-185427_hmc.csv', nuts_file='~/ADVI/logs/20200331-185818_nuts.csv')

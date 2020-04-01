@@ -30,10 +30,10 @@ def sep_training_test(y,x,test):
   x_test = x[:,:test]
   return y_train, y_test, x_train, x_test
 
-num_features = 200
+num_features = 250
 
-y, x, w = make_training_data(1000, num_features, 2)
-y_train, y_test, x_train, x_test = sep_training_test(y,x,10)
+y, x, w = make_training_data(10000, num_features, 2)
+y_train, y_test, x_train, x_test = sep_training_test(y,x,1000)
 
 #print(y_train.shape)
 #print(y_test.shape)
@@ -49,15 +49,17 @@ model = Ard(num_features=num_features)
 
 # run hmc
 #tl.run_train_hmc(model, train_data, test_data,
-#                 step_size=0.001, num_results=100, num_burnin_steps=100)
+#                 step_size=0.001, num_results=150, num_burnin_steps=100)
 
 # run nuts
 #tl.run_train_nuts(model, train_data, test_data,
-#                  step_size=0.001, num_results=20, num_burnin_steps=0)
+#                  step_size=0.001, num_results=150, num_burnin_steps=100)
 
 # run advi
-tl.run_train_advi(model, train_data, test_data,
-                  step_limit=800)
+tl.run_train_advi(model, train_data, test_data)
+
+tl.run_train_advi(model, train_data, test_data, m=10)
+
 
 # good step_size for hmc is 0.1
 # good step_size for advi is 0.001
