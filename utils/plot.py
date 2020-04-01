@@ -81,4 +81,6 @@ def create_dataframe(df, algorithm, label=None):
 
 
 if __name__ == '__main__':
-    plot('~/ADVI/logs/20200401-081700_advi.csv', advi_file_2='~/ADVI/logs/20200401-081731_advi.csv', hmc_file='~/ADVI/logs/20200331-185427_hmc.csv', nuts_file='~/ADVI/logs/20200331-185818_nuts.csv')
+#    plot('~/ADVI/logs/20200401-093255_advi.csv', advi_file_2='~/ADVI/logs/20200401-093323_advi.csv', hmc_file='~/ADVI/logs/20200401-093545_hmc.csv')
+
+    plot('~/ADVI/logs/20200401-094427_advi.csv')
