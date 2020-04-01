@@ -6,7 +6,7 @@ import time
 
 
 def run_train_advi(model, train_data, test_data,
-                   step_limit=100, m=1, p=1, skip_steps=10, lr=0.1, old=False):
+                   step_limit=-1, m=1, p=1, skip_steps=10, lr=0.1, old=False):
     # set up joint_log_prob and log_likelihood with training and test data
     joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
     avg_log_likelihood2 = lambda *args: model.avg_log_likelihood(test_data, *args)
