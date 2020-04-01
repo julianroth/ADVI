@@ -56,10 +56,8 @@ model = Ard(num_features=num_features)
 #                  step_size=0.001, num_results=150, num_burnin_steps=100)
 
 # run advi
-tl.run_train_advi(model, train_data, test_data)
-
-tl.run_train_advi(model, train_data, test_data, m=10)
-
+tl.run_train_advi(model, train_data, test_data,
+                  step_limit=800,lr=0.01)
 
 # good step_size for hmc is 0.1
 # good step_size for advi is 0.001
