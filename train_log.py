@@ -13,7 +13,6 @@ def run_train_advi(model, train_data, test_data,
 
     # set up trace function for advi
     def trace_fn(advi, step):
-        #print(step)
         if((step % skip_steps == 0) or (step < 100)):
             if(old==True):
                 logger.log_step("elbo", advi.elbo(p), step)
@@ -55,13 +54,12 @@ def run_train_advi(model, train_data, test_data,
 
 
 def run_train_hmc(model, train_data, test_data, step_size,
-                  num_results=100, num_burnin_steps=100, skip_steps=10):
+                  num_results=100, num_burnin_steps=0, skip_steps=10):
 
     # trace_functions for hmc
     # this function operates at every step of the chain
     def trace_fn(state, results):
-        #print("Step {}".format(results.step))
-        if((results.step % skip_steps == 0) or (results.step < 100)):
+        if((results.step % skip_steps == 0) or results.step < 100):
             logger.log_step("avg log pred hmc",
                             "{}".format(state_to_avg_log_like(state, test_data, model)),
                             results.step)

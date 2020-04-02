@@ -4,7 +4,8 @@ sns.set()
 import numpy as np
 import pandas as pd
 
-def plot(advi_file, advi_file_2=None, hmc_file=None, nuts_file=None, time_log_scale=True, save_file=None):
+def plot_results(advi_file, advi_file_2=None, hmc_file=None, nuts_file=None,
+         time_log_scale=True, save_file=None):
     """
     Plots graph from log files
 
@@ -78,6 +79,48 @@ def create_dataframe(df, algorithm, label=None):
                          'algorithm' : algorithm.upper(),
                          'Label' : label})
     return data
+
+
+def plot(files, algorithms, labels, time_log_scale=True, save_file=None):
+    """
+
+    :param files: List of str, path object or file-like objects
+        List of CSV files of results
+    :param algorithms: List of str
+        Algorithms used to extract values from csv files (advi, hmc or nuts)
+    :param labels: List of str
+        Labels for legend
+    :param time_log_scale: same as plot_results
+    :param save_file:  same as plot_results
+    """
+    plt.clf()
+    num = len(files)
+    data = None
+    for i in range(num):
+        df = pd.read_csv(files[i])
+        plot_df = create_dataframe(df, algorithms[i], labels[i])
+        if data is None:
+            data = plot_df
+        else:
+            data = data.append(plot_df)
+
+    sns.set_style("ticks", {'axes.grid': False,
+                            'axes.spines.right': False,
+                            'axes.spines.top': False,
+                            'axes.spines.bottom': False})
+    ax = plt.gca()
+    ax.yaxis.grid(True)
+    ax.legend(loc='upper left', frameon=False)
+    grid = sns.lineplot(data=data, x='Seconds', y='Average Log Predictive', hue='Label',
+                        style='algorithm', legend='full')
+    if time_log_scale:
+        grid.set(xscale="log")
+    leg = plt.legend(title='', loc='lower right', labels=labels)
+    leg.get_frame().set_linewidth(0.0)
+    if save_file is None:
+        plt.show()
+    else:
+        plt.savefig(save_file, dpi=150)
 
 
 if __name__ == '__main__':
