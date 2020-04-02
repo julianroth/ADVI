@@ -13,16 +13,18 @@ def run_train_advi(model, train_data, test_data,
 
     # set up trace function for advi
     def trace_fn(advi, step):
-        if((step % skip_steps == 0) or (step < 100)):
-            if(old==True):
-                logger.log_step("elbo", advi.elbo(p), step)
-                logger.log_step("avg log pred advi",
-                                advi_to_avg_log_like(advi, avg_log_likelihood2, p), step)
-            else:
-                # run new function which does not re calc the elbo
-                logger.log_step("elbo", advi.current_elbo, step)
-                logger.log_step("avg log pred advi",
-                                advi_to_avg_log_like(advi, avg_log_likelihood2, p), step)
+        is_print_step = (step % skip_steps == 0) or (step < 100)
+        if(old==True):
+            #logger.log_step("elbo", advi.elbo(p), step)
+            logger.log_step("avg log pred advi",
+                            advi_to_avg_log_like(advi, avg_log_likelihood2, p),
+                            step, accumulate=True, print_step=is_print_step)
+        else:
+            # run new function which does not re calc the elbo
+            #logger.log_step("elbo", advi.current_elbo, step)
+            logger.log_step("avg log pred advi",
+                            advi_to_avg_log_like(advi, avg_log_likelihood2, p),
+                            step, accumulate=True, print_step=is_print_step)
 
     # run advi
     if(old==True):
@@ -59,10 +61,10 @@ def run_train_hmc(model, train_data, test_data, step_size,
     # trace_functions for hmc
     # this function operates at every step of the chain
     def trace_fn(state, results):
-        if((results.step % skip_steps == 0) or results.step < 100):
-            logger.log_step("avg log pred hmc",
-                            "{}".format(state_to_avg_log_like(state, test_data, model)),
-                            results.step)
+        is_print_step = (results.step % skip_steps == 0) or (results.step < 100)
+        logger.log_step("avg log pred hmc",
+                        state_to_avg_log_like(state, test_data, model),
+                        results.step, accumulate=True, print_step=is_print_step)
         return ()
 
     # set up joint_log_prob with training data
@@ -109,10 +111,10 @@ def run_train_nuts(model, train_data, test_data, step_size,
     def trace_fn_nuts(state, results):
         step = num_burnin_steps + logger.counter()
         #print(step)
-        if((step % skip_steps == 0) or (step < 100)):
-            logger.log_step("avg log pred nuts",
-                            "{}".format(state_to_avg_log_like(state, test_data, model)),
-                            step)
+        is_print_step = (step % skip_steps == 0) or (step < 100)
+        logger.log_step("avg log pred nuts",
+                        state_to_avg_log_like(state, test_data, model),
+                        step, accumulate=True, print_step=is_print_step)
         return ()
 
     # set up joint_log_prob with training data
@@ -160,6 +162,8 @@ def state_to_avg_log_like(states, data, model):
 def advi_to_avg_log_like(advi, avg_log_like, nsamples):
     theta_intermediate = advi.sample(nsamples)
     value = tf.reduce_mean(tf.map_fn(avg_log_like, theta_intermediate))
+    #theta_mu = advi.sample_mu()
+    #value = avg_log_like(theta_mu)
     return value
 
 
@@ -179,14 +183,25 @@ class Logger:
         log_file.close()
         self._buffer = ""
         self._counter = 0
+        self._last_val = 0.
         self._start_time = time.time()
         self._last_flush = self._start_time
 
-    def log_step(self, label, value, step=-1):
+    def log_step(self, label, value, step=-1, accumulate=False, print_step=True):
+        """
+        WARNING: If used with accumulate=True,
+            - only log the values of one function
+            - log the function value for every step.
+        """
         if step == -1:
             step = self._counter
-        self._buffer += "{},{},{},{}\n".format(label, step, self._total_time(),
-                                               value)
+        if accumulate and step > 0:
+            s = float(step)
+            value = (1./s) * value + ((s-1.)/s) * self._last_val
+            self._last_val = value
+        if print_step:
+            self._buffer += "{},{},{},{}\n".format(label, step, self._total_time(),
+                                                   value)
         self._counter += 1
         if self._buffer_time() >= self._flush_time:
             self._flush()
