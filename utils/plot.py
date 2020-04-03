@@ -128,4 +128,6 @@ if __name__ == '__main__':
 
 #    plot('~/ADVI/logs/20200401-103711_advi.csv', advi_file_2='~/ADVI/logs/20200401-103928_advi.csv', hmc_file='~/ADVI/logs/20200401-141630_hmc.csv', nuts_file='~/ADVI/logs/20200401-142000_nuts.csv')
 
-    plot_results('~/ADVI/logs/20200402-095221_advi.csv', advi_file_2='~/ADVI/logs/20200402-095717_advi.csv', hmc_file='~/ADVI/logs/20200402-111043_hmc.csv', nuts_file='~/ADVI/logs/20200402-111633_nuts.csv')
+    plot_results('~/ADVI/logs/20200403-145207_advi.csv', advi_file_2='~/ADVI/logs/20200403-150123_advi.csv', hmc_file='~/ADVI/logs/20200403-153542_hmc.csv', nuts_file='~/ADVI/logs/20200403-153853_nuts.csv')
+
+
