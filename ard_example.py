@@ -47,17 +47,18 @@ test_data = (y_test, x_test)
 
 model = Ard(num_features=num_features)
 
+# run advi
+tl.run_train_advi(model, train_data, test_data, step_limit=5000, lr=0.1)
+# paper saids they used lr = 0.1
+
+tl.run_train_advi(model, train_data, test_data, step_limit=5000, lr=0.1, m=10)
+
+
 # run hmc
-#tl.run_train_hmc(model, train_data, test_data,
-#                 step_size=0.001, num_results=150, num_burnin_steps=100)
+tl.run_train_hmc(model, train_data, test_data,
+                 step_size=0.001, num_results=3500, num_burnin_steps=0)
 
 # run nuts
-#tl.run_train_nuts(model, train_data, test_data,
-#                  step_size=0.001, num_results=150, num_burnin_steps=100)
+tl.run_train_nuts(model, train_data, test_data,
+                  step_size=0.001, num_results=3500, num_burnin_steps=0)
 
-# run advi
-tl.run_train_advi(model, train_data, test_data,
-                  step_limit=800,lr=0.01)
-
-# good step_size for hmc is 0.1
-# good step_size for advi is 0.001

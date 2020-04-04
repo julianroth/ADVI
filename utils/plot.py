@@ -130,5 +130,5 @@ if __name__ == '__main__':
 
 #    plot_results('~/ADVI/logs/20200403-145207_advi.csv', advi_file_2='~/ADVI/logs/20200403-150123_advi.csv', hmc_file='~/ADVI/logs/20200403-153542_hmc.csv', nuts_file='~/ADVI/logs/20200403-153853_nuts.csv')
 
-    plot_results('~/ADVI/logs/20200403-175614_advi.csv', advi_file_2='~/ADVI/logs/20200404-000413_advi.csv',hmc_file='~/ADVI/logs/20200404-051848_hmc.csv',nuts_file='~/ADVI/logs/20200404-073700_nuts.csv')
+    plot_results('~/ADVI/logs/20200404-103938_advi.csv', advi_file_2='~/ADVI/logs/20200404-110728_advi.csv',hmc_file='~/ADVI/logs/20200404-143631_hmc.csv',nuts_file='~/ADVI/logs/20200404-170222_nuts.csv')
 
