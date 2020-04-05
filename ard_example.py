@@ -3,7 +3,7 @@ import train_log as tl
 from models.ard import Ard
 
 #import tensorflow as tf
-#tf.config.experimental_run_functions_eagerly(True)
+# tf.config.experimental_run_functions_eagerly(True)
 # uncomment above code when wanting to run everything in
 # eager mode
 # currently, the @tf.function turns those parts in to graphs.
@@ -17,8 +17,10 @@ def make_training_data(num_samples, dims, sigma):
   x = np.random.randn(dims, num_samples).astype(np.float64)
   w = sigma * np.random.randn(1, dims).astype(np.float64)
   noise = np.random.randn(num_samples).astype(np.float64)
+
+  #noise = 0.
   w[:,:int(dims/2)] = 0
-  y = w.dot(x) + noise
+  y = w.dot(x) + (noise/4)
     
   return y, x, w
 
@@ -48,17 +50,13 @@ test_data = (y_test, x_test)
 model = Ard(num_features=num_features)
 
 # run advi
-#tl.run_train_advi(model, train_data, test_data, step_limit=5000, lr=0.1)
+tl.run_train_advi(model, train_data, test_data, step_limit=2000, lr=0.1)
 # paper saids they used lr = 0.1
 
 #tl.run_train_advi(model, train_data, test_data, step_limit=5000, lr=0.1, m=10)
 
-
+tl.run_train_hmc(model, train_data, test_data, step_size=0.001, num_results=3500, num_burnin_steps=0)
 # run hmc
-tl.run_train_hmc(model, train_data, test_data,
-                 step_size=0.001, num_results=3500, num_burnin_steps=0)
 
-# run nuts
-tl.run_train_nuts(model, train_data, test_data,
-                  step_size=0.001, num_results=3500, num_burnin_steps=0)
 
+tl.run_train_nuts(model, train_data, test_data, step_size=0.001, num_results=3500, num_burnin_steps=0)

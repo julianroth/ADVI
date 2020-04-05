@@ -197,7 +197,7 @@ class Logger:
             step = self._counter
         if accumulate and step > 0:
             s = float(step)
-            #value = (1./s) * value + ((s-1.)/s) * self._last_val
+            value = (1./s) * value + ((s-1.)/s) * self._last_val
             self._last_val = value
         if print_step:
             self._buffer += "{},{},{},{}\n".format(label, step, self._total_time(),
