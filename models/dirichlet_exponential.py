@@ -95,7 +95,6 @@ class DirichletExponential:
         distributions
         """
         if self._biji is not None:
-            print(self.init_state_fn())
             return self._biji.forward(self.init_state_fn())
         else:
             return self.init_state_fn()
