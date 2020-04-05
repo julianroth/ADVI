@@ -18,7 +18,6 @@ def run_advi(shape, target_log_prob_fn, bijector,
     # initialise advi kernel and optimizer
     advi = ADVIModel(shape, target_log_prob_fn, bijector, m)
     if adam:
-        print('uses adam')
         sgd = tf.keras.optimizers.Adam(learning_rate=lr, beta_1=0.975, beta_2=0.9999, epsilon=1)
     else:
         sgd = tf.keras.optimizers.Adagrad(learning_rate=lr, epsilon=1)
