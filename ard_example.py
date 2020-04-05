@@ -16,9 +16,9 @@ def make_training_data(num_samples, dims, sigma):
   """
   x = np.random.randn(dims, num_samples).astype(np.float64)
   w = sigma * np.random.randn(1, dims).astype(np.float64)
-  noise = np.random.randn(num_samples).astype(np.float64)
+  #noise = np.random.randn(num_samples).astype(np.float64)
 
-  #noise = 0.
+  noise = 0.
   w[:,:int(dims/2)] = 0
   y = w.dot(x) + (noise/4)
     
