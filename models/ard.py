@@ -16,7 +16,7 @@ import numpy as np
 
 
 class Ard:
-    def __init__(self, num_features=250):
+    def __init__(self, num_features=250, transform=False):
         # number of features in data
         self.features = num_features
         # total number of trainable parameters in model
@@ -25,6 +25,7 @@ class Ard:
         self.b_0 = tf.constant(1, dtype=tf.float64)
         self.c_0 = tf.constant(1, dtype=tf.float64)
         self.d_0 = tf.constant(1, dtype=tf.float64)
+        self._biji = self.bijector() if transform else None
         
     def convert_alpha(self, alpha):
         one_over_sqrt_alpha  = tf.map_fn(
@@ -47,6 +48,8 @@ class Ard:
         returns: log likelihood
         P(D|theta)
         """
+        if self._biji is not None:
+            params = self._biji.inverse(params)
         y, x = data
         w, tau, alpha = self.sep_params(params)
         alpha_prior = self.alpha_prior_()
@@ -82,6 +85,8 @@ class Ard:
         alpha = [features+1:]
         """
         y, x = data
+        if self._biji is not None:
+            params = self._biji.inverse(params)
         w, tau, alpha = self.sep_params(params)
         alpha_prior = self.alpha_prior_()
         tau_prior = self.tau_prior_()
@@ -120,7 +125,11 @@ class Ard:
         Returns: starting states for HMC and Nuts by sampling from prior
         distribution
         """
-        return self._initial_state_mean()
+        if self._biji is not None:
+            return self._biji.forward(self._initial_state_mean())
+        else:
+            return self._initial_state_mean()
+        
 
     def _initial_state_random(self):
         alpha = self.alpha_prior_().sample([self.features])
@@ -146,3 +155,4 @@ class Ard:
         """
         return tfp.bijectors.Blockwise([tfp.bijectors.Identity(), tfp.bijectors.Log()],
                                         [self.features, self.features+1])
+        

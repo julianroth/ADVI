@@ -1,4 +1,4 @@
-import tensorflow as tf
+AAimport tensorflow as tf
 import tensorflow_probability as tfp
 from advi.core import run_advi_old, run_advi
 import datetime
@@ -51,7 +51,6 @@ def run_train_advi(model, train_data, test_data,
         
     logger.close()
     print("advi done")
-
     return advi_res
 
 
@@ -79,7 +78,7 @@ def run_train_hmc(model, train_data, test_data, step_size,
             target_log_prob_fn=joint_log_prob2,
             num_leapfrog_steps=3,
             step_size=step_size),
-        num_adaptation_steps=int(num_burnin_steps * 0.8))
+        num_adaptation_steps=int(num_burnin_steps * 0.8),)
 
     # Run HMC
     def run_chain_hmc():
