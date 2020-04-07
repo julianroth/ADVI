@@ -150,6 +150,9 @@ class Ard:
         return tf.concat([w, tau, alpha],0)
 
     def bijector(self):
+        return tfp.bijectors.Log()
+        
+    def bijector_real(self):
         """
         returns: bijector associated with this model
         """
