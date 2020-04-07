@@ -148,11 +148,8 @@ class Ard:
         one_over_sqrt_alpha = self.convert_alpha(alpha)
         w = self.w_prior_(sigma, one_over_sqrt_alpha).mean()
         return tf.concat([w, tau, alpha],0)
-
-    def bijector(self):
-        return tfp.bijectors.Log()
         
-    def bijector_real(self):
+    def bijector(self):
         """
         returns: bijector associated with this model
         """
