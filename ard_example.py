@@ -17,9 +17,8 @@ def make_training_data(num_samples, dims, sigma, mu=0):
   x = np.random.randn(dims, num_samples).astype(np.float64)
   w = sigma * np.random.randn(1, dims).astype(np.float64)
   #noise = np.random.randn(num_samples).astype(np.float64)
-  w = np.abs(w) + 0.01
   noise = 0.
-  w[:,:int(dims/2)] = 0
+  w[:,:int(dims/2)] = 0.
   y = w.dot(x) + (noise/4) + mu
     
   return y, x, w
@@ -51,7 +50,7 @@ test_data = (y_test, x_test)
 model = Ard(num_features=num_features, transform=False)
 
 # run advi
-tl.run_train_advi(model, train_data, test_data, step_limit=15000, lr=0.1)
+#tl.run_train_advi(model, train_data, test_data, step_limit=15000, lr=0.1)
 # paper saids they used lr = 0.1
 #tl.run_train_advi(model, train_data, test_data, step_limit=5000, lr=0.1, m=10)
 model = Ard(num_features=num_features, transform=True)
