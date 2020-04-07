@@ -3,7 +3,7 @@ import seaborn as sns
 sns.set()
 import numpy as np
 import pandas as pd
-
+import glob
 def plot_results(advi_file, advi_file_2=None, hmc_file=None, nuts_file=None,
          time_log_scale=True, save_file=None):
     """
@@ -133,4 +133,13 @@ if __name__ == '__main__':
 #    plot_results('~/ADVI/logs/20200404-103938_advi.csv', advi_file_2='~/ADVI/logs/20200404-110728_advi.csv',hmc_file='~/ADVI/logs/20200404-143631_hmc.csv',nuts_file='~/ADVI/logs/20200404-170222_nuts.csv')
 
 #    plot_results('~/ADVI/logs/20200404-222551_advi.csv', advi_file_2= '~/ADVI/logs/ard_plot_fin2/20200404-103938_advi.csv', hmc_file='~/ADVI/logs/20200405-081706_hmc.csv')
-    plot_results('~/ADVI/logs/20200406-115635_advi.csv', hmc_file='~/ADVI/logs/20200406-105229_hmc.csv', nuts_file='~/ADVI/logs/20200406-105543_nuts.csv')
+#    plot_results('~/ADVI/logs/20200406-174903_advi.csv', hmc_file='~/ADVI/logs/20200406-184211_hmc.csv', nuts_file='~/ADVI/logs/20200406-201903_nuts.csv')
+    import os
+    directory = '/users/Mizunt/ADVI/logs/'
+    os.chdir(directory)
+    sorted_dir = sorted(filter(os.path.isfile, os.listdir('.')), key=os.path.getmtime)
+    print(sorted_dir[-4])
+    print(sorted_dir[-3])
+    print(sorted_dir[-2]) 
+    print(sorted_dir[-1])
+    plot_results(sorted_dir[-2], hmc_file= sorted_dir[-1])
