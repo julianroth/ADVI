@@ -7,7 +7,7 @@ tfb = tfp.bijectors
 
 class DirichletExponential:
 
-    def __init__(self, users=28, items=20, factors=10):
+    def __init__(self, users=28, items=20, factors=10, transform=False):
         # dimensions from paper (see Section 3.2):
         # U = 28, I = 20, K = 10
         self._U = users
@@ -20,6 +20,10 @@ class DirichletExponential:
         # parameter settings from paper
         self._alpha_0 = tf.constant(1000. * np.ones(self._K), dtype=tf.float64)
         self._lambda_0 = tf.constant(0.1, dtype=tf.float64)
+        # set up the bijector if model operates in transformed space
+        self._biji = self.bijector() if transform else None
+        # attribute to modify the initial state function
+        self.init_state_fn = self.initial_state_mean
 
     def theta_prior(self):
         return tfd.Dirichlet(self._alpha_0)
@@ -45,6 +49,8 @@ class DirichletExponential:
         """
         returns: log likelihood P(D | theta, beta)
         """
+        if self._biji is not None:
+            params = self._biji.inverse(params)
         theta, beta = self.sep_params(params)
         theta = tf.reshape(theta, [self._U, self._K])
         beta = tf.reshape(beta, [self._K, self._I])
@@ -66,6 +72,8 @@ class DirichletExponential:
                                    + log P(theta) + log P(beta)
         """
         log_like = self.log_likelihood(data, params)
+        if self._biji is not None:
+            params = self._biji.inverse(params)
         theta, beta = self.sep_params(params)
         theta = tf.reshape(theta, [self._U, self._K])
         log_theta_prior = tf.reduce_sum(self.theta_prior().log_prob(theta))
@@ -86,17 +94,33 @@ class DirichletExponential:
         returns: starting states for sampling/optimisation from prior
         distributions
         """
-        return self._initial_state_mean()
+        if self._biji is not None:
+            return self._biji.forward(self.init_state_fn())
+        else:
+            return self.init_state_fn()
 
-    def _initial_state_random(self):
+    # different initial state functions
+
+    def initial_state_prior_sample(self):
         theta = self.theta_prior().sample(self._U)
         beta = self.beta_prior().sample(self._I * self._K)
         return tf.concat([tf.reshape(theta, [-1]), beta], 0)
 
-    def _initial_state_mean(self):
+    def initial_state_mean(self):
         theta = tf.tile(self.theta_prior().mean(), [self._U])
         beta = self.beta_prior().mean() * np.ones(self._I * self._K)
         return tf.concat([tf.reshape(theta, [-1]), beta], 0)
+
+    def initial_state_prior_sample_restricted(self, beta_dif):
+        theta = self.theta_prior().sample(self._U)
+        beta = self.beta_prior().mean() * np.ones(self._I * self._K)
+        sigma = tf.constant(beta_dif, dtype=tf.float64)
+        noise = tfd.Uniform(-sigma, sigma).sample(self._I * self._K)
+        beta = beta + noise
+        return tf.concat([tf.reshape(theta, [-1]), beta], 0)
+
+    def initial_state_advi(self):
+        return self.bijector().inverse(tf.zeros((self._U + self._I) * self._K, dtype=tf.float64))
 
     def bijector(self):
         """
