@@ -1,4 +1,4 @@
-AAimport tensorflow as tf
+import tensorflow as tf
 import tensorflow_probability as tfp
 from advi.core import run_advi_old, run_advi
 import datetime
