@@ -34,7 +34,7 @@ def sep_training_test(y,x,test):
 
 num_features = 250
 
-y, x, w = make_training_data(10000, num_features, 1)
+y, x, w = make_training_data(10000, num_features, 0.3, mu=0)
 y_train, y_test, x_train, x_test = sep_training_test(y,x,1000)
 
 #print(y_train.shape)
@@ -47,15 +47,15 @@ test_data = (y_test, x_test)
 
 # Define and train model
 
-model = Ard(num_features=num_features, transform=True)
+model = Ard(num_features=num_features, transform=False)
 
 # run advi
-tl.run_train_advi(model, train_data, test_data, step_limit=8000, lr=0.1)
+#tl.run_train_advi(model, train_data, test_data, step_limit=15000, lr=0.1)
 # paper saids they used lr = 0.1
 model = Ard(num_features=num_features, transform=True)
 #tl.run_train_advi(model, train_data, test_data, step_limit=5000, lr=0.1, m=10)
 
-tl.run_train_hmc(model, train_data, test_data, step_size=0.001, num_results=2000)
+#tl.run_train_hmc(model, train_data, test_data, step_size=0.001, num_results=2000, num_burnin_steps=50)
 # run hmc
 
 

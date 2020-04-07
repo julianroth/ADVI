@@ -7,7 +7,7 @@ tfd = tfp.distributions
 
 # This implements the constrained gamma poisson distribution from 3.2
 class Gamma_Poisson():
-    def __init__(self, num_test=-1, test_split=0.2, permute=False):
+    def __init__(self, num_test=-1, test_split=0.2, permute=False, transform=False):
         self._data = frey_face.load_data()
 
         self._train_data, self._test_data =\
@@ -17,6 +17,7 @@ class Gamma_Poisson():
         self._U = 28
         self._I = 20
         self.num_params = self._U*self._K + self._K*self._I
+        self._biji = self.bijector() if transform else None
 
         # Gamma priors
         self._a_0 = tf.constant(1, dtype=tf.float64)
@@ -28,12 +29,16 @@ class Gamma_Poisson():
         self.beta_prior = tfd.Gamma(self._c_0, self._d_0)
 
     def prior_log_prob(self, params):
+        if self._biji is not None:
+            params = self._biji.inverse(params)
         theta, beta = self.sep_params(params)
         theta_prob = self.theta_prior.log_prob(theta)
         beta_prob = self.beta_prior.log_prob(beta)
         return tf.math.reduce_sum(theta_prob) + tf.math.reduce_sum(beta_prob)
 
     def log_likelihood(self, data, params):
+        if self._biji is not None:
+            params = self._biji.inverse(params)
         theta, beta = self.sep_params(params)
         theta = tf.reshape(theta, [self._U, self._K])
         beta = tf.reshape(beta, [self._K, self._I])
