@@ -116,19 +116,25 @@ class Ard:
         returns: parameters separated in to their different types
         """
         w = params[:self.features]
-        tau = params[self.features+1]
+        tau = params[self.features]
         alpha = params[self.features+1:]
         return w, tau, alpha
 
-    def return_initial_state(self):
+    def return_initial_state(self, random=False):
         """
         Returns: starting states for HMC and Nuts by sampling from prior
         distribution
         """
         if self._biji is not None:
-            return self._biji.forward(self._initial_state_mean())
+            if random == False:
+                return self._biji.forward(self._initial_state_mean())
+            else:
+                return self._biji.forward(self._initial_state_random())
         else:
-            return self._initial_state_mean()
+            if random == False:
+                return self._initial_state_mean()
+            else:
+                return self._initial_state_random()
         
 
     def _initial_state_random(self):
