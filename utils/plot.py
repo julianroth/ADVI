@@ -135,11 +135,10 @@ if __name__ == '__main__':
 #    plot_results('~/ADVI/logs/20200404-222551_advi.csv', advi_file_2= '~/ADVI/logs/ard_plot_fin2/20200404-103938_advi.csv', hmc_file='~/ADVI/logs/20200405-081706_hmc.csv')
 #    plot_results('~/ADVI/logs/20200406-174903_advi.csv', hmc_file='~/ADVI/logs/20200406-184211_hmc.csv', nuts_file='~/ADVI/logs/20200406-201903_nuts.csv')
     import os
-    directory = '/users/Mizunt/ADVI/logs/'
+    directory = '/users/Mizunt/ADVI/logs/cgp_final_final'
     os.chdir(directory)
     sorted_dir = sorted(filter(os.path.isfile, os.listdir('.')), key=os.path.getmtime)
-    print(sorted_dir[-4])
-    print(sorted_dir[-3])
+
     print(sorted_dir[-2]) 
     print(sorted_dir[-1])
-    plot_results(sorted_dir[-2], hmc_file= sorted_dir[-1])
+    plot_results(sorted_dir[-4],sorted_dir[-3],  hmc_file=sorted_dir[-2], nuts_file=sorted_dir[-1])#, nuts_file=sorted_dir[-1])#, hmc_file=sorted_dir[-1])
