@@ -71,7 +71,7 @@ def run_train_hmc(model, train_data, test_data, step_size,
     joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
 
     # set up initial chain state
-    initial_chain_state = model.return_initial_state()
+    initial_chain_state = model.return_initial_state(random=False)
 
     # Defining kernel for HMC
     adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
@@ -121,7 +121,7 @@ def run_train_nuts(model, train_data, test_data, step_size,
     joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
 
     # set up initial chain state
-    initial_chain_state = model.return_initial_state()
+    initial_chain_state = model.return_initial_state(random=False)
 
     # Defining kernel for NUTS
     nuts = tfp.mcmc.NoUTurnSampler(
