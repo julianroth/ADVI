@@ -122,6 +122,11 @@ class DirichletExponential:
     def initial_state_advi(self):
         return self.bijector().inverse(tf.zeros((self._U + self._I) * self._K, dtype=tf.float64))
 
+    def initial_state_stan(self):
+        range = tf.constant(2., dtype=tf.float64)
+        state_tr = tfd.Uniform(-range, range).sample((self._U + self._I) * self._K)
+        return self.bijector().inverse(state_tr)
+
     def bijector(self):
         """
         returns: bijector associated with this model
