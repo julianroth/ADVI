@@ -5,8 +5,6 @@ import sys
 
 
 if __name__ == "__main__":
-    # generate hierarchical logistic regression model
-    model = MixedGauss(id_transform=False)
     arg = str(sys.argv[-1])
 
     if arg == 'plot':
@@ -15,6 +13,7 @@ if __name__ == "__main__":
 
         plot_results(advi_file)
     else:
+        model = MixedGauss(id_transform=True)
         # run advi
         advi = tl.run_train_advi(model, None, None,
                           step_limit=-1, m=1, lr=0.1)
@@ -35,7 +34,7 @@ if __name__ == "__main__":
         sns.kdeplot(x.numpy(), y.numpy(), shade=False, shade_lowest=False, cmap='Blues')
 
         d = tfd.Normal(advi.mu, tf.math.exp(advi.omega))
-        data = d.sample(num_samples)
+        data = model.bijector().inverse(d.sample(num_samples))
         x = data[:, 0]
         y = data[:, 1]
         sns.kdeplot(x.numpy(), y.numpy(), shade=False, shade_lowest=False, cmap='Reds')
