@@ -4,6 +4,8 @@ sns.set()
 import numpy as np
 import pandas as pd
 import glob
+
+
 def plot_results(advi_file, advi_file_2=None, hmc_file=None, nuts_file=None,
          time_log_scale=True, y_lim=None, save_file=None):
     """
@@ -91,7 +93,6 @@ def create_dataframe(df, algorithm, label=None):
 
 def plot(files, algorithms, labels, time_log_scale=True, save_file=None):
     """
-
     :param files: List of str, path object or file-like objects
         List of CSV files of results
     :param algorithms: List of str
@@ -132,16 +133,12 @@ def plot(files, algorithms, labels, time_log_scale=True, save_file=None):
 
 
 if __name__ == '__main__':
-#    plot('~/ADVI/logs/20200401-093255_advi.csv', advi_file_2='~/ADVI/logs/20200401-093323_advi.csv', hmc_file='~/ADVI/logs/20200401-093545_hmc.csv')
-
-#    plot('~/ADVI/logs/20200401-103711_advi.csv', advi_file_2='~/ADVI/logs/20200401-103928_advi.csv', hmc_file='~/ADVI/logs/20200401-141630_hmc.csv', nuts_file='~/ADVI/logs/20200401-142000_nuts.csv')
-
-#    plot_results('~/ADVI/logs/20200403-145207_advi.csv', advi_file_2='~/ADVI/logs/20200403-150123_advi.csv', hmc_file='~/ADVI/logs/20200403-153542_hmc.csv', nuts_file='~/ADVI/logs/20200403-153853_nuts.csv')
-
-#    plot_results('~/ADVI/logs/20200404-103938_advi.csv', advi_file_2='~/ADVI/logs/20200404-110728_advi.csv',hmc_file='~/ADVI/logs/20200404-143631_hmc.csv',nuts_file='~/ADVI/logs/20200404-170222_nuts.csv')
-
-#    plot_results('~/ADVI/logs/20200404-222551_advi.csv', advi_file_2= '~/ADVI/logs/ard_plot_fin2/20200404-103938_advi.csv', hmc_file='~/ADVI/logs/20200405-081706_hmc.csv')
-#    plot_results('~/ADVI/logs/20200406-174903_advi.csv', hmc_file='~/ADVI/logs/20200406-184211_hmc.csv', nuts_file='~/ADVI/logs/20200406-201903_nuts.csv')
+    #plot('~/ADVI/logs/20200401-093255_advi.csv', advi_file_2='~/ADVI/logs/20200401-093323_advi.csv', hmc_file='~/ADVI/logs/20200401-093545_hmc.csv')
+    #plot('~/ADVI/logs/20200401-103711_advi.csv', advi_file_2='~/ADVI/logs/20200401-103928_advi.csv', hmc_file='~/ADVI/logs/20200401-141630_hmc.csv', nuts_file='~/ADVI/logs/20200401-142000_nuts.csv')
+    #plot_results('~/ADVI/logs/20200403-145207_advi.csv', advi_file_2='~/ADVI/logs/20200403-150123_advi.csv', hmc_file='~/ADVI/logs/20200403-153542_hmc.csv', nuts_file='~/ADVI/logs/20200403-153853_nuts.csv')
+    #plot_results('~/ADVI/logs/20200404-103938_advi.csv', advi_file_2='~/ADVI/logs/20200404-110728_advi.csv',hmc_file='~/ADVI/logs/20200404-143631_hmc.csv',nuts_file='~/ADVI/logs/20200404-170222_nuts.csv')
+    #plot_results('~/ADVI/logs/20200404-222551_advi.csv', advi_file_2= '~/ADVI/logs/ard_plot_fin2/20200404-103938_advi.csv', hmc_file='~/ADVI/logs/20200405-081706_hmc.csv')
+    #plot_results('~/ADVI/logs/20200406-174903_advi.csv', hmc_file='~/ADVI/logs/20200406-184211_hmc.csv', nuts_file='~/ADVI/logs/20200406-201903_nuts.csv')
     import os
     directory = '/users/Mizunt/ADVI/logs/'
     os.chdir(directory)

@@ -13,13 +13,14 @@ if __name__ == "__main__":
     model = DirichletExponential(users=28, items=20, factors=10, transform=True)
     model.init_state_fn = lambda: model.initial_state_advi()
 
-    # run advi
-    #tl.run_train_advi(model, train_data, test_data, m=1, skip_steps=10)
+    # run ADVI
+    #tl.run_train_advi(model, train_data, test_data, m=1, skip_steps=10,
+    #                  adam=True, lr=0.02)
 
     # run NUTS
-    #tl.run_train_nuts(model, train_data, test_data,
-    #                  step_size=0.001, num_results=100)
+    tl.run_train_nuts(model, train_data, test_data,
+                      step_size=0.001, num_results=10000)
 
     # run HMC
     tl.run_train_hmc(model, train_data, test_data,
-                     step_size=0.001, num_results=100)
+                     step_size=0.001, num_results=10000)

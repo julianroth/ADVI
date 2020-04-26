@@ -1,12 +1,26 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
-from advi.core import run_advi_old, run_advi
+from advi.core import run_advi
 import datetime
 import time
 
 
 def run_train_advi(model, train_data, test_data,
-                   step_limit=-1, m=1, p=1, skip_steps=10, lr=0.1, old=False, adam=False):
+                   step_limit=-1, m=1, p=1, skip_steps=10, lr=0.1, adam=False):
+    """
+    Runs ADVI on the given Bayesian model and training data. It draws
+    samples of ADVI at each step and computes a performance measure from
+    the test data, which is written into a csv file by a Logger object.
+
+    :param model: Bayesian model to fit to the data.
+    :param m: number of samples to compute the elbo and the gradients of advi
+    :param p: number of samples drawn at each step to compute the avg log
+        predictive (performance measure) for logging
+    :param skip_steps: number of steps between two logging entries
+    :param lr: learning rate for ADVI
+    :param adam: if true, adam is used, otherwise adagrad
+    :return: the final ADVI model
+    """
     # set up joint_log_prob and log_likelihood with training and test data
     joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
     avg_log_likelihood2 = lambda *args: model.avg_log_likelihood(test_data, *args)
@@ -14,49 +28,44 @@ def run_train_advi(model, train_data, test_data,
     # set up trace function for advi
     def trace_fn(advi, step):
         is_print_step = (step % skip_steps == 0) or (step < 100)
-        if(old==True):
-            #logger.log_step("elbo", advi.elbo(p), step)
-            logger.log_step("avg log pred advi",
-                            advi_to_avg_log_like(advi, avg_log_likelihood2, p),
-                            step, accumulate=True, print_step=is_print_step)
-        else:
-            # run new function which does not re calc the elbo
-            #logger.log_step("elbo", advi.current_elbo, step)
-            logger.log_step("avg log pred advi",
-                            advi_to_avg_log_like(advi, avg_log_likelihood2, p),
-                            step, accumulate=True, print_step=is_print_step)
-
+        # run new function which does not re calc the elbo
+        #logger.log_step("elbo", advi.current_elbo, step)
+        logger.log_step("avg log pred advi",
+                        advi_to_avg_log_like(advi, avg_log_likelihood2, p),
+                        step, accumulate=True, print_step=is_print_step)
     # run advi
-    if(old==True):
-        print("running old ADVI")
-    else:
-        print("running new ADVI")
+    print("running ADVI")
     # set up logger and run chain
     filename = "./logs/{}_advi.csv".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     logger = Logger(filename)
-    if(old==True):
-        advi_res = run_advi_old(shape=model.num_params,
-                                target_log_prob_fn=joint_log_prob2,
-                                bijector=model.bijector(),
-                                m=m,
-                                step_limit=step_limit,
-                                trace_fn=trace_fn)
-    else:
-        advi_res = run_advi(shape=model.num_params,
-                            target_log_prob_fn=joint_log_prob2,
-                            bijector=model.bijector(),
-                            m=m,
-                            step_limit=step_limit,
-                            trace_fn=trace_fn, lr=lr,
-                            adam=adam)
-        
+    advi_res = run_advi(shape=model.num_params,
+                        target_log_prob_fn=joint_log_prob2,
+                        bijector=model.bijector(),
+                        m=m,
+                        step_limit=step_limit,
+                        trace_fn=trace_fn, lr=lr,
+                        adam=adam)
     logger.close()
-    print("advi done")
+    print("ADVI done")
     return advi_res
 
 
 def run_train_hmc(model, train_data, test_data, step_size,
                   num_results=100, num_burnin_steps=0, skip_steps=10, transform=False):
+    """
+    Runs HMC on the given Bayesian model and training data. It draws
+    samples of HMC at each step and computes a performance measure from
+    the test data, which is written into a csv file by a Logger object.
+
+    :param model: Bayesian model to fit to the data.
+    :param step_size: initial learning rate for HMC
+    :param num_results: number of sampling steps HMC performs
+    :param num_burnin_steps: number of burn-in steps
+    :param skip_steps: number of steps between two logging entries
+    :param transform: indicates whether HMC operates in constrained or
+        unconstrained space -- needed for performance measure computation
+    :return: the samples and acceptance matrices
+    """
     if transform:
         t = model.bijector()
     
@@ -118,6 +127,20 @@ def run_train_hmc(model, train_data, test_data, step_size,
 
 def run_train_nuts(model, train_data, test_data, step_size,
                    num_results=20, num_burnin_steps=0, skip_steps=1, transform=False):
+    """
+    Runs NUTS on the given Bayesian model and training data. It draws
+    samples of NUTS at each step and computes a performance measure from
+    the test data, which is written into a csv file by a Logger object.
+
+    :param model: Bayesian model to fit to the data.
+    :param step_size: initial learning rate for NUTS
+    :param num_results: number of sampling steps HMC performs
+    :param num_burnin_steps: number of burn-in steps
+    :param skip_steps: number of steps between two logging entries
+    :param transform: indicates whether HMC operates in constrained or
+        unconstrained space -- needed for performance measure computation
+    :return: the samples
+    """
     if transform:
         t = model.bijector()
     
@@ -125,7 +148,6 @@ def run_train_nuts(model, train_data, test_data, step_size,
     # this function operates at every step of the chain
     def trace_fn_nuts(state, results):
         step = num_burnin_steps + logger.counter()
-        #print(step)
         is_print_step = (step % skip_steps == 0) or (step < 100)
         if transform:
             logger.log_step("avg log pred nuts",
@@ -179,20 +201,20 @@ def run_train_nuts(model, train_data, test_data, step_size,
     return states
 
 
+# misc functions
+
 def state_to_avg_log_like(states, data, model):
     return model.avg_log_likelihood(data, states)
-
 
 def advi_to_avg_log_like(advi, avg_log_like, nsamples):
     theta_intermediate = advi.sample(nsamples)
     value = tf.reduce_mean(tf.map_fn(avg_log_like, theta_intermediate))
-    #theta_mu = advi.sample_mu()
-    #value = avg_log_like(theta_mu)
     return value
 
 
 class Logger:
-
+    """A logger object buffers steps of the inference methods that are
+    registered via the log_step function and writes it to a csv file."""
     def __init__(self, filename, flush_seconds=10.):
         self._filename = filename
         self._flush_time = flush_seconds
@@ -225,6 +247,7 @@ class Logger:
             self._flush()
 
     def counter(self):
+        """Count of registered steps."""
         return self._counter
 
     def close(self):
@@ -237,10 +260,8 @@ class Logger:
         return time.time() - self._last_flush
 
     def _flush(self):
-        #temp = time.time()
         log_file = open(self._filename, "a")
         log_file.write(self._buffer)
         log_file.close()
         self._buffer = ""
         self._last_flush = time.time()
-        #print(time.time() - temp)
