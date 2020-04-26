@@ -2,12 +2,6 @@ import numpy as np
 import train_log as tl
 from models.ard import Ard
 
-#import tensorflow as tf
-# tf.config.experimental_run_functions_eagerly(True)
-# uncomment above code when wanting to run everything in
-# eager mode
-# currently, the @tf.function turns those parts in to graphs.
-# not sure why but needed for plotting. 
 
 # Making training data
 def make_training_data(num_samples, dims, sigma, mu=0):

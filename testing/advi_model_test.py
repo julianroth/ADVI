@@ -1,6 +1,4 @@
-
 import unittest
-import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 from advi.model import ADVIModel
@@ -27,10 +25,6 @@ class GradientTest(unittest.TestCase):
             model.omega = tf.Variable(omega, trainable=True)
             self.compare_gradients(model, 3)
         print("Done checking gradients for sensible parameter values.")
-
-    def other_model(self):
-        # TODO something with different bijector
-        pass
 
     def compare_gradients(self, model, accuracy_places):
         dist = model._dist
@@ -68,5 +62,4 @@ class FakeSampler:
         self._values = values
 
     def sample(self, nsamples):
-        print(self._values[:nsamples].shape)
         return self._values[:nsamples]
