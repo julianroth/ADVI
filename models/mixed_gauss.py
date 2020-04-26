@@ -6,7 +6,7 @@ tfd = tfp.distributions
 class MixedGauss:
 
     def __init__(self, id_transform=True):
-        self._mu = tf.constant([[-1, -1], [1, 1]], dtype=tf.float64)
+        self._mu = tf.constant([[2, 2], [4, 4]], dtype=tf.float64)
         self._std = tf.constant([[[.5, .25], [.25, 1.]],
                                  [[.5, -.25], [-.25, 1.]]], dtype=tf.float64)
         self.num_params = 2
@@ -34,4 +34,4 @@ class MixedGauss:
         if self._id_transform:
             return tfb.Identity()
         else:
-            return tfb.Shift(tf.constant(2.5, dtype=tf.float64))
+            return tfb.Shift(tf.constant(-3, dtype=tf.float64))

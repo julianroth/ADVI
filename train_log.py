@@ -56,22 +56,35 @@ def run_train_advi(model, train_data, test_data,
 
 
 def run_train_hmc(model, train_data, test_data, step_size,
-                  num_results=100, num_burnin_steps=0, skip_steps=10):
-
+                  num_results=100, num_burnin_steps=0, skip_steps=10, transform=False):
+    if transform:
+        t = model.bijector()
+    
     # trace_functions for hmc
     # this function operates at every step of the chain
     def trace_fn(state, results):
         is_print_step = (results.step % skip_steps == 0) or (results.step < 100)
-        logger.log_step("avg log pred hmc",
-                        state_to_avg_log_like(state, test_data, model),
-                        results.step, accumulate=True, print_step=is_print_step)
+        if transform:
+            logger.log_step("avg log pred hmc",
+                            state_to_avg_log_like(t.inverse(state), test_data, model),
+                            results.step, accumulate=True, print_step=is_print_step)
+        else:
+            logger.log_step("avg log pred hmc",
+                            state_to_avg_log_like(state, test_data, model),
+                            results.step, accumulate=True, print_step=is_print_step)
         return ()
 
     # set up joint_log_prob with training data
-    joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
+    if transform:
+        joint_log_prob2 = lambda params: model.joint_log_prob(train_data, t.inverse(params))
+    else:
+        joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
 
     # set up initial chain state
     initial_chain_state = model.return_initial_state(random=False)
+
+    if transform:
+        initial_chain_state = t(initial_chain_state)
 
     # Defining kernel for HMC
     adaptive_hmc = tfp.mcmc.SimpleStepSizeAdaptation(
@@ -104,24 +117,36 @@ def run_train_hmc(model, train_data, test_data, step_size,
 
 
 def run_train_nuts(model, train_data, test_data, step_size,
-                   num_results=20, num_burnin_steps=0, skip_steps=1):
-
+                   num_results=20, num_burnin_steps=0, skip_steps=1, transform=False):
+    if transform:
+        t = model.bijector()
+    
     # trace_functions for nuts
     # this function operates at every step of the chain
     def trace_fn_nuts(state, results):
         step = num_burnin_steps + logger.counter()
         #print(step)
         is_print_step = (step % skip_steps == 0) or (step < 100)
-        logger.log_step("avg log pred nuts",
-                        state_to_avg_log_like(state, test_data, model),
-                        step, accumulate=True, print_step=is_print_step)
+        if transform:
+            logger.log_step("avg log pred nuts",
+                            state_to_avg_log_like(t.inverse(state), test_data, model),
+                            step, accumulate=True, print_step=is_print_step)
+        else:
+            logger.log_step("avg log pred nuts",
+                            state_to_avg_log_like(state, test_data, model),
+                            step, accumulate=True, print_step=is_print_step)
         return ()
 
     # set up joint_log_prob with training data
-    joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
+    if transform:
+        joint_log_prob2 = lambda params: model.joint_log_prob(train_data, t.inverse(params))
+    else:
+        joint_log_prob2 = lambda *args: model.joint_log_prob(train_data, *args)
 
     # set up initial chain state
-    initial_chain_state = model.return_initial_state(random=False)
+    initial_chain_state = model.return_initial_state()
+    if transform:
+        initial_chain_state = t(initial_chain_state)
 
     # Defining kernel for NUTS
     nuts = tfp.mcmc.NoUTurnSampler(
@@ -155,7 +180,6 @@ def run_train_nuts(model, train_data, test_data, step_size,
 
 
 def state_to_avg_log_like(states, data, model):
-    sample_mean = tf.reduce_mean(states, axis=[0])
     return model.avg_log_likelihood(data, states)
 
 
@@ -168,7 +192,6 @@ def advi_to_avg_log_like(advi, avg_log_like, nsamples):
 
 
 def state_to_loss(states, data, model):
-    sample_mean = tf.reduce_mean(states, axis=[0])
     w, _, _ = model.sep_params(states, model.num_features)
     return model.loss(data, w)
 
