@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 def plot_results(advi_file, advi_file_2=None, hmc_file=None, nuts_file=None,
-         time_log_scale=True, save_file=None):
+         time_log_scale=True, y_lim=None, save_file=None):
     """
     Plots graph from log files
 
@@ -30,26 +30,30 @@ def plot_results(advi_file, advi_file_2=None, hmc_file=None, nuts_file=None,
     """
     plt.clf()
     labels = []
+    colors = []
     advi_df = pd.read_csv(advi_file)
     if advi_file_2 is not None:
         data = create_dataframe(advi_df, 'advi', 'ADVI (M = 1)')
         advi_df_2 = pd.read_csv(advi_file_2)
         data = data.append(create_dataframe(advi_df_2, 'advi', 'ADVI (M = 10)'), ignore_index=True)
         labels += ['ADVI (M = 1)', 'ADVI (M = 10)']
+        colors += ["#9b59b6", "#3498db"]
     else:
         data = create_dataframe(advi_df, 'advi')
         labels += ['ADVI']
+        colors += ["#9b59b6"]
     if hmc_file is not None:
         hmc_df = pd.read_csv(hmc_file)
         data = data.append(create_dataframe(hmc_df, 'hmc'), ignore_index=True)
         labels += ['HMC']
+        colors += ["#95a5a6"]
     if nuts_file is not None:
         nuts_df = pd.read_csv(nuts_file)
         data = data.append(create_dataframe(nuts_df, 'nuts'), ignore_index=True)
         labels += ['NUTS']
+        colors += ["#e74c3c"]
 
     # style of graph
-    colors = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c"]
     sns.set_style("ticks", {'axes.grid': False,
                             'axes.spines.right': False,
                             'axes.spines.top': False,
@@ -58,15 +62,19 @@ def plot_results(advi_file, advi_file_2=None, hmc_file=None, nuts_file=None,
     ax.yaxis.grid(True)
     ax.legend(loc='upper left', frameon=False)
     grid = sns.lineplot(data=data, x='Seconds', y='Average Log Predictive', hue='Label',
-                        style='algorithm', palette=sns.color_palette(colors[:len(labels)]), legend='full')
+                        style='algorithm', palette=sns.color_palette(colors), legend='full')
     if time_log_scale:
         grid.set(xscale="log")
     leg = plt.legend(title='', loc='lower right', labels=labels)
     leg.get_frame().set_linewidth(0.0)
+    
+    if y_lim is not None:
+        grid.set_ylim(y_lim[0], y_lim[1])
+    
     if save_file is None:
         plt.show()
     else:
-        plt.savefig(save_file, dpi=150)
+        plt.savefig(save_file, dpi=200)
 
 
 def create_dataframe(df, algorithm, label=None):
