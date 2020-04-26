@@ -8,6 +8,13 @@ class ADVIModel(tf.keras.Model):
     performing ADVI."""
 
     def __init__(self, dim, log_prob, bijector, m=1, name=None):
+        """
+        :param dim: number of dimensions K for the latent variable space
+        :param log_prob: log joint probability function, taking a
+            latent variable vector as input
+        :param bijector: transformation function T mapping supp(p) to R^K
+        :param m: number of samples for computing the gradients and the elbo
+        """
         super(ADVIModel, self).__init__(name=name)
         # dimension of theta, mu, omega, ...
         self._dim = dim

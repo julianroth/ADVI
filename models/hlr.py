@@ -5,7 +5,9 @@ import data.election88 as polls
 from utils.sep_data import sep_training_test
 tfd = tfp.distributions
 
+
 class HLR:
+    """Hierarchical logistic regression model (see Section 3.1 of ADVI paper)"""
     def __init__(self, num_test=-1, test_split=0.2, permute=False):
         self._x, self._y = polls.load_data()
         self._prev_vote = polls.load_prev_vote()
@@ -87,10 +89,6 @@ class HLR:
         return self.log_prior(params) + self.log_likelihood(data, params)
 
     def sep_params(self, params):
-        """
-        input params: trained parameters for model
-        returns: parameters separated in to their different types
-        """
         betas = params[0:self._n_beta]
         alphas = params[self._n_beta:self._n_beta + self._n_alpha]
         stds = params[self._n_beta + self._n_alpha:]
@@ -113,10 +111,8 @@ class HLR:
         return alpha_age, alpha_edu, alpha_age_edu, alpha_region, alpha_state
 
     def return_initial_state(self, random=False):
-        """
-        Returns: starting states for HMC and Nuts by sampling from prior
-        distribution
-        """
+        """returns initial parameter state: if random, then sampled from the prior,
+        else from the means of the priors"""
         # currently no special state for alpha_state
         # mean of stds for alpha prior
         stds = self.std_prior().mean() * tf.ones([self._n_alpha + self._n_state], dtype=tf.float64)
@@ -130,6 +126,7 @@ class HLR:
                               self.std_prior().mean() * tf.ones([self._n_alpha], dtype=tf.float64)], axis=0)
 
     def bijector(self):
+        """transformation function associated with this model"""
         tfb = tfp.bijectors
         return tfb.Blockwise([tfb.Identity(), tfb.Invert(tfb.Sigmoid(self._ulb, self._uub))],
                              [self._n_beta + self._n_alpha, self._n_alpha])

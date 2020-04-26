@@ -1,30 +1,23 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
-tfd = tfp.distributions
 import numpy as np
-
-# Template for models, things I need
-# 1. self.features = num_features
-# number of features in the data
-# i.e. x has 10 features
-#
-# 2. self.num_params
-# number of trainable parameters in model. 
-# 3. funtions all functions below log_likelihood
-# 
-#
+tfd = tfp.distributions
 
 
 class Ard:
+    """Hierarchical linear regression with automatic relevance
+    determination model (see Section 3.1 of ADVI paper)"""
     def __init__(self, num_features=250, transform=False):
         # number of features in data
         self.features = num_features
         # total number of trainable parameters in model
-        self.num_params = (self.features *2) + 1
+        self.num_params = (self.features * 2) + 1
+        # parameters from the paper
         self.a_0 = tf.constant(1, dtype=tf.float64)
         self.b_0 = tf.constant(1, dtype=tf.float64)
         self.c_0 = tf.constant(1, dtype=tf.float64)
         self.d_0 = tf.constant(1, dtype=tf.float64)
+        # set up the bijector if model is transformed into unconstrained space
         self._biji = self.bijector() if transform else None
         
     def convert_alpha(self, alpha):
@@ -45,8 +38,7 @@ class Ard:
         """
         input data: (y, x) with y as target data and x as data
         input params: all trainable parameters in model
-        returns: log likelihood
-        P(D|theta)
+        returns: log likelihood P(D|theta)
         """
         if self._biji is not None:
             params = self._biji.inverse(params)
@@ -65,8 +57,7 @@ class Ard:
         """
         input data: (y, x) with y as target data and x as data
         input params: all trainable parameters in model
-        returns: average log likelihood
-        P(D|theta) / #data
+        returns: average log likelihood P(D|theta) / #data
         """
         y, _ = data
         _, ndata = y.shape
@@ -77,12 +68,7 @@ class Ard:
         input data: (y, x) with y as target data and x as data
         params: all the parameters we are training in the model
         returns: joint log probability
-        joint log prob.
         log P(theta, D) = log P(theta) + log P(D|theta)
-        params is a tensor of size (features * 2) + 1
-        regressors / weights  = [:features]
-        tau = [features+1]
-        alpha = [features+1:]
         """
         y, x = data
         if self._biji is not None:
@@ -97,18 +83,6 @@ class Ard:
             tf.linalg.matvec(x, w, transpose_a=True), sigma).log_prob(y))
         sum_is = log_likelihood_ + tf.reduce_sum(w_prior.log_prob(w)) + tau_prior.log_prob(tau) + tf.reduce_sum(alpha_prior.log_prob(alpha)) 
         return sum_is
-        
-    def loss(self, y, x, w):
-        """
-        input y: data target
-        input x: data
-        input w: trained parameters
-        returns: squared difference between target and predicted
-        good for debugging
-        just does sum((y - ypred)**2)
-        """
-        y_pred = tf.linalg.matvec(x, w, transpose_a=True)
-        return tf.reduce_sum(tf.math.abs(tf.math.subtract(y, y_pred)))
 
     def sep_params(self, params):
         """
@@ -122,8 +96,9 @@ class Ard:
 
     def return_initial_state(self, random=False):
         """
-        Returns: starting states for HMC and Nuts by sampling from prior
-        distribution
+        random: if true, state is initialised randomly by sampling from prior,
+            if false, by taking the means of the priors
+        returns: initial state in constrained or unconstrained space
         """
         if self._biji is not None:
             if random == False:
@@ -135,9 +110,11 @@ class Ard:
                 return self._initial_state_mean()
             else:
                 return self._initial_state_random()
-        
 
     def _initial_state_random(self):
+        """
+        computes an initial parameter state by randomly sampling from the priors
+        """
         alpha = self.alpha_prior_().sample([self.features])
         tau = self.tau_prior_().sample()
         sigma = tf.math.sqrt(tau)
@@ -147,6 +124,9 @@ class Ard:
         return tf.concat([w, tau, alpha], 0)
 
     def _initial_state_mean(self):
+        """
+        computes an initial parameter state by taking the means of the priors
+        """
         alpha = self.alpha_prior_().mean() * np.ones([self.features])
         tau = tf.constant(1., dtype=tf.float64)
         sigma = tf.math.sqrt(tau)
@@ -157,8 +137,7 @@ class Ard:
         
     def bijector(self):
         """
-        returns: bijector associated with this model
+        transformation function associated with this model
         """
         return tfp.bijectors.Blockwise([tfp.bijectors.Identity(), tfp.bijectors.Log()],
                                         [self.features, self.features+1])
-        

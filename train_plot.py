@@ -145,8 +145,3 @@ def state_to_log_like(states, data, model):
     sample_mean = tf.reduce_mean(states, axis=[0])
     return model.log_likelihood(data, states)
 
-
-def state_to_loss(states, data, model):
-    sample_mean = tf.reduce_mean(states, axis=[0])
-    w, _, _ = model.sep_params(states, model.num_features)
-    return model.loss(data, w)

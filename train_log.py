@@ -191,11 +191,6 @@ def advi_to_avg_log_like(advi, avg_log_like, nsamples):
     return value
 
 
-def state_to_loss(states, data, model):
-    w, _, _ = model.sep_params(states, model.num_features)
-    return model.loss(data, w)
-
-
 class Logger:
 
     def __init__(self, filename, flush_seconds=10.):

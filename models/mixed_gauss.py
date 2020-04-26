@@ -4,7 +4,7 @@ tfd = tfp.distributions
 
 
 class MixedGauss:
-
+    """A toy multi-modal mixed Gaussian posterior model."""
     def __init__(self, id_transform=True):
         self._mu = tf.constant([[2, 2], [4, 4]], dtype=tf.float64)
         self._std = tf.constant([[[.5, .25], [.25, 1.]],

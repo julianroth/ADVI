@@ -1,10 +1,9 @@
-
 import tensorflow as tf
 import tensorflow_probability as tfp
 
 
 class SimpleGaussian:
-
+    """A simple toy Gaussian posterior model for testing."""
     def __init__(self, mu, sigma):
         self.mu = mu
         self.sigma = sigma

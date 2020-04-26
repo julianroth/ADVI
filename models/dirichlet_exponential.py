@@ -6,7 +6,7 @@ tfb = tfp.bijectors
 
 
 class DirichletExponential:
-
+    """Dirichlet exponential model (see Section 3.2 of ADVI paper)"""
     def __init__(self, users=28, items=20, factors=10, transform=False):
         # dimensions from paper (see Section 3.2):
         # U = 28, I = 20, K = 10
@@ -20,7 +20,7 @@ class DirichletExponential:
         # parameter settings from paper
         self._alpha_0 = tf.constant(1000. * np.ones(self._K), dtype=tf.float64)
         self._lambda_0 = tf.constant(0.1, dtype=tf.float64)
-        # set up the bijector if model operates in transformed space
+        # set up the bijector if model is transformed into unconstrained space
         self._biji = self.bijector() if transform else None
         # attribute to modify the initial state function
         self.init_state_fn = self.initial_state_mean
@@ -99,7 +99,7 @@ class DirichletExponential:
         else:
             return self.init_state_fn()
 
-    # different initial state functions
+    # different state initialisation functions
 
     def initial_state_prior_sample(self):
         theta = self.theta_prior().sample(self._U)
@@ -129,7 +129,7 @@ class DirichletExponential:
 
     def bijector(self):
         """
-        returns: bijector associated with this model
+        returns: transformation function associated with this model
         """
         simpl = tfb.Invert(tfb.IteratedSigmoidCentered())
         res_orig = tfb.Reshape([self._U, self._K])

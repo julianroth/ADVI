@@ -5,8 +5,9 @@ from utils.bijectors import LogOrdered, positive_ordered
 from utils.sep_data import sep_training_test
 tfd = tfp.distributions
 
-# This implements the constrained gamma poisson distribution from 3.2
+
 class Gamma_Poisson():
+    """Constrained gamma poisson model (see Section 3.2 of ADVI paper)"""
     def __init__(self, num_test=-1, test_split=0.2, permute=False, transform=False):
         self._data = frey_face.load_data()
 
@@ -67,6 +68,8 @@ class Gamma_Poisson():
         return tf.concat([theta, beta], axis=0)
 
     def return_initial_state(self, random=False):
+        """returns initial parameter state: if random, then sampled from the prior,
+        else from the means of the priors"""
         if random:
             return tf.concat([sorted(self.theta_prior.sample(self._K)) for _ in range(self._U)] +
                              [self.beta_prior.sample(self._K * self._I)], axis=0)
@@ -76,6 +79,7 @@ class Gamma_Poisson():
                               tf.repeat(self.beta_prior.mean(), self._K * self._I)], axis=0)
 
     def bijector(self, ordered=True):
+        """transformation function associated with this model"""
         tfb = tfp.bijectors
         if ordered:
             #simpl = LogOrdered()
