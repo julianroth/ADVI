@@ -1,9 +1,9 @@
-#Automatic Variational Inference
+# Automatic Variational Inference
 
 TensorFlow implementation of "Automatic Differentiation Variational Inference" (ADVI) [1]. This was done as part of "Advanced
 Topics in Machine Learning" course at Oxford by Julian Roth, Mizu Nishikawa-Toomey and Julius Hense. 
 
-A report summarizing our work can be found in Group_Report.pdf.
+A report summarizing our work can be found in Group-Report.pdf.
 
 # Requirements
 - Python >= 3.7.0
